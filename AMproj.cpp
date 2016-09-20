@@ -27,6 +27,9 @@ vector<long double> ClassCPlanerWithJacobian_ld(vector<long double> ENvec);
 vector<double> ClassCPlanerWithJacobian(vector<double> ENvec, double Kick_Size, int NumPet, double Time_Between_Kicks);
 
 
+// Need a get phi function as this can be tricky as atan function wont deal with the full circle
+double GetPhi(vector<double> ENvec);
+
 int main(){
 
 	cout << "Start the clock !!!\n";
@@ -275,15 +278,15 @@ vector<double> ClassCPlanerWithJacobian(vector<double> ENvec, double Kick_Size, 
 	int TimeStep = (Time_Between_Kicks)/dt;
 	
 	int delta = 0;
-	if( Current_Step%TimeStep == 0 )
+	if( TimeStep > 0 && Current_Step%TimeStep == 0 )
 		delta = 1;
 	
 	// From Documentation "Linearization/Linearization.pdf" I am including the functions f_x(T) and f_y(T)
-	double phi = atan(ENvec[1]/ENvec[0]);
+	double phi = GetPhi(ENvec);
 	double f_x = Kick_Size*cos(phi)*sin(phi*NumPet)*delta;
 	double f_y = Kick_Size*sin(phi)*sin(phi*NumPet)*delta;
 	
-	// Here the dx/dt = f(x)	
+	// Here, the dx/dt = f(x)	
 	f[0] = - ENvec[0] - Dp*ENvec[1] - ENvec[3] + f_x;
 	f[1] = - ENvec[1] + Dp*ENvec[0] + ENvec[2] + f_y;
 	f[2] = Gpc*( -1*ENvec[2] + Dp*ENvec[3] + ENvec[1]*ENvec[4] );
@@ -376,6 +379,28 @@ void ExecuteScaling(){
 
 //****************************************************************************************
 
+double GetPhi(vector<double> ENvec){
+	
+	double phi = fabs(atan(ENvec[1]/ENvec[0]));
+	
+	if(ENvec[0] == 0){
+		if(ENvec[1] > 0 )
+			return PI/2.0;
+		else
+			return 3*PI/2.0;
+	}
+	else if( ENvec[0] > 0 && ENvec[1] >= 0 )
+		return phi;
+	else if( ENvec[0] < 0 && ENvec[1] >= 0 )
+		return PI - phi;
+	else if( ENvec[0] < 0 && ENvec[1] <= 0 )
+		return PI + phi;
+	else 
+		return 2*PI - phi;
+	
+}
+
+//****************************************************************************************
 
 void OutMat(vector <vector <double> > Mat){
 	for(int i = 0; i < Mat[0].size(); i++){

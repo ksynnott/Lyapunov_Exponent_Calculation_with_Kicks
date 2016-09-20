@@ -15,6 +15,8 @@
 
 using namespace std;
 
+static const double PI = 2*acos(0.0);
+
 // We have the following constants
 static const double alpha = 4.0;
 static const double nb = 3.4;
