@@ -10,17 +10,13 @@ public:
 	RungeKutta(int NumSteps, double dt);
 	RungeKutta(double TimeEvlo, double dt);
 	
-	vector <vector <double> > RK4(vector<double> (f_yt)(vector <double> vec, double param), vector<double> y0, double K);
-	vector <vector <double> > RK5(vector<double> (f_yt)(vector <double> vec, double param), vector<double> y0, double K);
-	
+	vector <vector <double> > RK4(vector<double> (f_yt)(vector <double> vec, double param), vector<double> y0, double K);	
 	vector <vector <double> > RK4(vector<double> (f_yt)(vector <double> vec), vector<double> y0);
-	vector <vector <double> > RK5(vector<double> (f_yt)(vector <double> vec), vector<double> y0);
-
-	vector <double> RK4_1(vector<double> (f_yt)(vector <double> vec, double param), vector<double> y0, double K);
-	
-	vector <double> RK4_1(vector <double> (f_yt)(vector<double> vec, vector<double> v), vector<double> ENvec, vector<double> y0);
 	
 	vector<double> RK4_11(vector <double> (f_yt)(vector<double> vec, double param), vector<double> ENPvec, double K);
+	
+	vector <double> RK4_11(vector <double> (f_yt)(vector<double> vec, int Current_Step, double Kick_Size, double Time_Between_Kicks), 
+											vector<double> ENPvec, int C_Step, double Kick_Size, double Time_Between_Kicks);
 	
 	vector<long double> RK4_ld(vector <long double> (f_yt)(vector<long double> vec), vector<long double> ENPvec);
 	

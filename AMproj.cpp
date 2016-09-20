@@ -24,7 +24,7 @@ vector<long double> ClassCPlanerWithJacobian_ld(vector<long double> ENvec);
 
 // Here are the updated systems with forcing included in the Jacobian
 // when doing the linearization. 
-vector<double> ClassCPlanerWithJacobian(vector<double> ENvec, double Kick_Size, int NumPet, double Time_Between_Kicks);
+vector<double> ClassCPlanerWithJacobian(vector<double> ENvec, int Current_Step, double Kick_Size, double Time_Between_Kicks);
 
 
 // Need a get phi function as this can be tricky as atan function wont deal with the full circle
@@ -270,7 +270,7 @@ vector<long double> ClassBPlanerWithJacobian_ld(vector<long double> ENvec){
 
 //****************************************************************************************
 
-vector<double> ClassCPlanerWithJacobian(vector<double> ENvec, double Kick_Size, int NumPet, double Time_Between_Kicks, int Current_Step){
+vector<double> ClassCPlanerWithJacobian(vector<double> ENvec, int Current_Step, double Kick_Size, double Time_Between_Kicks){
 	
 	vector<double> f(10);
 	
