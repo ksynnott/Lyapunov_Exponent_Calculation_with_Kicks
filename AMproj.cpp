@@ -293,7 +293,7 @@ vector<double> ClassCPlanerWithJacobian(vector<double> ENvec, double Kick_Size, 
 	
 	// Again from Documentation "Linearization/Linearization.pdf" I am including the necessary differentials of f_x(T) and f_y(T)
 	double Dphi_Ex = (-ENvec[1])/( ENvec[0]*ENvec[0] + ENvec[1]*ENvec[1] );
-	double Dphi_Ey = ( ENvec[0])/( ENvec[0]*ENvec[0] + ENvec[1]*ENvec[1] )
+	double Dphi_Ey = ( ENvec[0])/( ENvec[0]*ENvec[0] + ENvec[1]*ENvec[1] );
 	
 	double Df_xx = Dphi_Ex*Kick_Size*( NumPet*cos(phi)*cos(phi*NumPet) - sin(phi)*sin(phi*NumPet) );
 	double Df_xy = Dphi_Ey*Kick_Size*( NumPet*cos(phi)*cos(phi*NumPet) - sin(phi)*sin(phi*NumPet) );
@@ -301,7 +301,7 @@ vector<double> ClassCPlanerWithJacobian(vector<double> ENvec, double Kick_Size, 
 	double Df_yy = Dphi_Ey*Kick_Size*( NumPet*sin(phi)*cos(phi*NumPet) + cos(phi)*sin(phi*NumPet) );
 	
 	// Jacobian 
-	f[5] = (-1.0 + Df_xx)ENvec[5] + (-1.0*Dp + Df_yx)*ENvec[6] - ENvec[8];
+	f[5] = (-1.0 + Df_xx)*ENvec[5] + (-1.0*Dp + Df_xy)*ENvec[6] - ENvec[8];
 	f[6] = (Dp + Df_yx)*ENvec[5] +  (-1.0 + Df_yy)*ENvec[6] + ENvec[7];
 	
 	f[7] = Gpc*(   ENvec[4]*ENvec[6] - ENvec[7] + Dp*ENvec[8] + ENvec[1]*ENvec[9] );
