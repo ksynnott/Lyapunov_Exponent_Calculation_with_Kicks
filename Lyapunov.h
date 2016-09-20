@@ -16,8 +16,6 @@ public:
 	vector<double> CalcManyLypunov(vector<double> (*f_yt)(vector <double> vec, double param), double K);
 
 	double CalcBigLypunov_Kick(vector<long double> (*f_yt)(vector <long double> vec), double K, double kicksize);
-	vector<double> CalcManyLypunov_Kick(vector<double> (*f_yt)(vector <double> vec, double param), double K);
-
 
 private:
 	vector<double> x;

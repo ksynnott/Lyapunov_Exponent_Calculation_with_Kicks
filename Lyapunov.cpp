@@ -252,7 +252,7 @@ double Lyapunov::CalcBigLypunov_Kick(vector<long double> (*f_yt)(vector <long do
 	vector<long double> XP( xsize + psize );
 	vector<long double> P(psize);
 	
-	
+	// Initialise vector XP
 	for(int i = 0; i < (int)XP.size(); i++){
 		if(i < xsize)
 			XP[i] = (long double)x[i];
@@ -266,42 +266,39 @@ double Lyapunov::CalcBigLypunov_Kick(vector<long double> (*f_yt)(vector <long do
 	RungeKutta RunKut(steps, dt);
 	int count = 0;
 	
-	
 	for(int i = 0; i < steps; i++){
 		XP = RunKut.RK4_ld(f_yt, XP);
 	}
 	
-	//cout << "Amplitude = " << sqrt(XP[0]*XP[0] + XP[1]*XP[1]) << endl;
-	//cout << "N = " << XP[4] << endl;
 	
 	//Renormalize p
 	for(int i = xsize; i < xsize+psize; i++){
 		P[i - xsize] = XP[i];
 	}
 	
-	
 	P = normalize(P);
-	
 	
 	for(int i = xsize; i < xsize+psize; i++){
 		XP[i] = P[i - xsize];
 	}
 	
-	steps = (TimeEvlo)/dt;
+	// Now that we are on the attractor we can run, looking for the growth of p
+	steps = (TimeEvlo)/dt; // How many steps in total
 	
 	count = 0;
 	int NumT = 0;
 	vector<double> al; 
 	
-	int Kickstep =  (int)(Kicktime/dt);
+	int Kickstep =  (int)(Kicktime/dt); // The kickstep !!Want to get rid of soon!!
 	
 	cout << "Kicktime = " << Kicktime << endl;
 	cout << "Kicksize = " << kicksize << endl; 
 	
+	// Run . . . 
 	for(int i = 0; i <= steps; i++){
 		XP = RunKut.RK4_ld(f_yt, XP);
 		
-			
+		// Want to get rid of this
 		if( i%Kickstep == 0 && i > 0 ){
 			//cout << "hi" << endl;
 			if(xsize == 5){
@@ -313,60 +310,30 @@ double Lyapunov::CalcBigLypunov_Kick(vector<long double> (*f_yt)(vector <long do
 			}
 		}
 		
-		/*double phase = atan( XP[1]/XP[0] );
-		double Amp = XP[0]*XP[0] + XP[1]*XP[1];
-		double ActAmp = Lambda - 1 - Dp*Dp;
 		
-		if((phase > -0.001 && phase < 0.001 && Amp < ActAmp + 0.001 && Amp > ActAmp - 0.001 )|| i == 794328){
-			cout << XP[0] << endl;
-			cout << XP[1] << endl;
-			cout << XP[2] << endl;
-			cout << XP[3] << endl;
-			cout << XP[4] << endl;
-			
-			cout << "Amp = " << Amp << endl;
-			cout << "ActAmp = " << ActAmp << endl;
-			cout << "Step = " << i << endl;
-			
-			
-			
-			cout << "Angle = " << atan( XP[1]/XP[0] ) << endl;
-			cout << "Thus there is a kick of " << sin(NumPet*phase) << endl;
-			
-			int hihih = 0;
-			cin >> hihih;
-			
-		}*/
-		
-		
+		// For the step we choose, get norm of p then normalise
 		if((i%m == 0 && i > 1)){
-			
 			
 			for(int g = xsize; g < xsize+psize; g++){
 				P[g - xsize] = XP[g];
 			}
 			
-			
-			NumT = m + NumT;
-			count = count + 1;
+			NumT = m + NumT;   // Keep track
+			count = count + 1; // Keep track
 			
 			double tmp1 = 1/((double)(m*dt));
 			double tmp2 = GetNorm(P); 
 			
-			
-			al.push_back(tmp1*log(tmp2));
-			
+			al.push_back(tmp1*log(tmp2)); // Vector holding the growth of p for this run
 			
 			P = normalize(P);
 			for(int g = xsize; g < xsize+psize; g++){
 				XP[g] = P[g - xsize];
 			}
-			
-			
 		}
-		
 	}
 	
+	// Calculate Lyapunov Exponent
 	double LyapExp = 0.0;
 	for(int i = 0; i < (int)(al.size()); i++){
 		LyapExp = (LyapExp + al[i]);
@@ -378,123 +345,6 @@ double Lyapunov::CalcBigLypunov_Kick(vector<long double> (*f_yt)(vector <long do
 	
 }
 
-vector<double> Lyapunov::CalcManyLypunov_Kick(vector<double> (*f_yt)(vector <double> vec, double param), double Kicktime){
-	
-	int xsize = (int)x.size();
-	int psize = (int)pvol.size();
-	int NumP = (int)pvol[0].size();
-	
-	
-	vector<vector<double> > XP( NumP, vector<double>(xsize + psize) );
-	
-	for(int j = 0; j < xsize + psize; j++){
-		for(int i = 0; i < NumP; i++){
-			if(j < xsize)
-				XP[i][j] = x[j];
-			else{
-				XP[i][j] = pvol[j - xsize][i];
-			}
-		}	
-	}
-	
-	
-	// Iterate long enough to insure x is in attractor.
-	int steps = Tran/dt;
-	RungeKutta RunKut(steps, dt);
-	int count = 0;
-	
-	for(int j = 0; j < NumP; j++){
-		for(int i = 0; i < steps; i++){
-			XP[j] = RunKut.RK4_11(f_yt, XP[j], 0.0);
-		}
-	}
-	
-	// Need to create a matrix to hold the ps for the G-S
-	vector<vector<long double> > GSvec(NumP, vector<long double>(psize));
-	
-	// First fill GSvec
-	for(int j = 0; j < NumP; j++){
-		for(int i = 0; i < psize; i++){
-			GSvec[j][i] = (long double)XP[j][i + xsize];
-		}
-	}
-	
-	
-	//Execute the GS process
-	GramSchmidt Orth(GSvec);
-	GSvec = Orth.GSprocess(GSvec);
-	
-	
-	// Refill XP
-	for(int j = 0; j < NumP; j++){
-		for(int i = 0; i < psize; i++){
-			XP[j][i + xsize] = (double)GSvec[j][i];
-		}
-	}
-	
-
-	steps = (TimeEvlo - Tran)/dt;
-	count = 0;
-	int NumT = 0;
-	vector<vector<double> > al(3); 
-	
-	for(int i = 0; i <= steps; i++){
-	
-		for(int j = 0; j < NumP; j++){
-			XP[j] = RunKut.RK4_11(f_yt, XP[j], 0.0);
-		}
-		
-		if((i%m == 0 && i > 1)){
-			
-			// First fill GSvec
-			for(int h = 0; h < NumP; h++){
-				for(int k = 0; k < psize; k++){
-					GSvec[h][k] = (long double)XP[h][k + xsize];
-				}
-			}
-			
-			NumT = m + NumT;
-			count = count + 1;
-			
-			double tmp1 = 1/((double)(m*dt));
-			
-			for(int k = 0; k < NumP; k++ ){
-				double tmp2 = GetVol(GSvec, k); 
-				al[k].push_back(tmp1*log(tmp2));
-			}
-			
-			GSvec = Orth.GSprocess(GSvec);
-			
-			for(int h = 0; h < NumP; h++){
-				for(int k = 0; k < psize; k++){
-					XP[h][k + xsize] = GSvec[h][k];
-				}
-			}
-			
-		}
-		
-		//loadbar(i, steps, 50);
-	}
-	//cout << endl;
-	
-	
-	vector<double> LyapExp(NumP);
-	for(int j = 0; j < NumP; j++){
-		for(int i = 0; i < (int)(al[0].size()); i++){
-			if(j > 0){
-				LyapExp[j] = (LyapExp[j] + al[j][i] - al[j-1][i]);
-			}
-			else
-				LyapExp[j] = (LyapExp[j] + al[j][i]);
-		}
-		LyapExp[j] = (1/(double)(al[0].size() ))*LyapExp[j];
-	}	
-	
-	//LookForConvergence(m,  al[0]);
-		
-	return LyapExp;
-	
-}
 //****************************************************************************************
 //Private 
 vector <double> Lyapunov::normalize(vector<double> v){
@@ -920,20 +770,8 @@ vector<long double> Lyapunov::KICK_B_Pert(vector<long double> ENvec, double kick
 	return ENvec;	
 }
 
-//****************************************************************************************
-/*static inline void loadbar(unsigned int x, unsigned int n, unsigned int w)
-{
-    if ( (x != n) && (x % (n/100+1) != 0) ) return;
- 
-    float ratio  =  x/(float)n;
-    int   c      =  ratio * w;
- 
-    cout << setw(3) << (int)(ratio*100) << "% [";
-    for (int x=0; x<c; x++) cout << "=";
-    for (int x=c; x<w; x++) cout << " ";
-    cout << "]\r" << flush;
-}*/
 
+//Helper Functions
 void OutMatLy(vector <vector <double> > Mat){
 	cout << setprecision(60);
 	for(int i = 0; i < Mat.size(); i++){
