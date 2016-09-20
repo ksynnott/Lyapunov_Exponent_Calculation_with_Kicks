@@ -345,6 +345,92 @@ double Lyapunov::CalcBigLypunov_Kick(vector<long double> (*f_yt)(vector <long do
 	
 }
 
+
+double Lyapunov::CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> vec, int Current_Step, double Kick_Size, double Time_Between_Kicks), double Kicktime, double kicksize){
+	
+	int xsize = (int)x.size();
+	int psize = (int)p.size();
+	vector<double> XP( xsize + psize );
+	vector<double> P(psize);
+	
+	// Initialise vector XP
+	for(int i = 0; i < (int)XP.size(); i++){
+		if(i < xsize)
+			XP[i] = (double)x[i];
+		else
+			XP[i] = (double)p[i - xsize];
+	}
+	
+	
+	// Iterate long enough to insure x is in attractor
+	int steps = Tran/dt;
+	RungeKutta RunKut(steps, dt);
+	int count = 0;
+	
+	for(int i = 0; i < steps; i++){
+		// Choose Kicktime+1 as current step to insure the delta in function is always zero. See function in AMproj.cpp
+		XP = RunKut.RK4_11(f_yt, XP, (Kicktime+1), kicksize, Kicktime);
+	}
+	
+	
+	//Renormalize p
+	for(int i = xsize; i < xsize+psize; i++){
+		P[i - xsize] = XP[i];
+	}
+	
+	P = normalize(P);
+	
+	for(int i = xsize; i < xsize+psize; i++){
+		XP[i] = P[i - xsize];
+	}
+	
+	// Now that we are on the attractor we can run, looking for the growth of p
+	steps = (TimeEvlo)/dt; // How many steps in total
+	
+	count = 0;
+	int NumT = 0;
+	vector<double> al; 
+	
+	// Run . . . 
+	for(int i = 0; i <= steps; i++){
+		XP = RunKut.RK4_11(f_yt, XP, i, kicksize, Kicktime);
+		
+		
+		// For the step we choose, get norm of p then normalise
+		if((i%m == 0 && i > 1)){
+			
+			for(int g = xsize; g < xsize+psize; g++){
+				P[g - xsize] = XP[g];
+			}
+			
+			NumT = m + NumT;   // Keep track
+			count = count + 1; // Keep track
+			
+			double tmp1 = 1/((double)(m*dt));
+			double tmp2 = GetNorm(P); 
+			
+			al.push_back(tmp1*log(tmp2)); // Vector holding the growth of p for this run
+			
+			P = normalize(P);
+			for(int g = xsize; g < xsize+psize; g++){
+				XP[g] = P[g - xsize];
+			}
+		}
+	}
+	
+	// Calculate Lyapunov Exponent
+	double LyapExp = 0.0;
+	for(int i = 0; i < (int)(al.size()); i++){
+		LyapExp = (LyapExp + al[i]);
+	}
+	
+	LookForConvergence(m,  al);
+	
+	return (1/(double)(al.size() ))*LyapExp;
+	
+}
+
+
 //****************************************************************************************
 //Private 
 vector <double> Lyapunov::normalize(vector<double> v){

@@ -5,6 +5,7 @@
 #include <iomanip>     
 #include <vector>
 #include <math.h>
+#include <cmath>
 #include <fstream>
 #include <algorithm>
 #include <string>
@@ -18,7 +19,7 @@ using namespace std;
 static const double PI = 2*acos(0.0);
 
 // We have the following constants
-static const double alpha = 4.0;
+static const double alpha = 4.0; 
 static const double nb = 3.4;
 static const double gammac = 5.0*( pow(10.0, 11.0) ); 
 static const double gamman = 2.0*( pow(10.0, 9.0) ); 

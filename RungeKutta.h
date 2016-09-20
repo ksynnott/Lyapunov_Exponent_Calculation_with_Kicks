@@ -16,7 +16,7 @@ public:
 	vector<double> RK4_11(vector <double> (f_yt)(vector<double> vec, double param), vector<double> ENPvec, double K);
 	
 	vector <double> RK4_11(vector <double> (f_yt)(vector<double> vec, int Current_Step, double Kick_Size, double Time_Between_Kicks), 
-											vector<double> ENPvec, int C_Step, double Kick_Size, double Time_Between_Kicks);
+											vector<double> ENPvec, int C_Step, double K_Size, double T_B_Kicks);
 	
 	vector<long double> RK4_ld(vector <long double> (f_yt)(vector<long double> vec), vector<long double> ENPvec);
 	
