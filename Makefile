@@ -9,7 +9,7 @@ CFLAGS  = -g -Wall
 TARGET = AMproj
 XHEADERS = Attach.h
 
-OBJECTS = $(TARGET).o GramSchmidt.o RungeKutta.o LocMax.o BifurcationDiagram.o Lyapunov.o
+OBJECTS = $(TARGET).o GramSchmidt.o RungeKutta.o Lyapunov.o
 
 all: $(TARGET)
 
@@ -25,11 +25,6 @@ GramSchmidt.o: GramSchmidt.cpp GramSchmidt.h $(XHEADERS)
 RungeKutta.o: RungeKutta.cpp RungeKutta.h $(XHEADERS)	
 	$(CC) $(CFLAGS) -c RungeKutta.cpp
 	
-LocMax.o: LocMax.cpp LocMax.h $(XHEADERS)	
-	$(CC) $(CFLAGS) -c LocMax.cpp
-	
-BifurcationDiagram.o: BifurcationDiagram.cpp BifurcationDiagram.h $(XHEADERS)	
-	$(CC) $(CFLAGS) -c BifurcationDiagram.cpp
 	
 Lyapunov.o: Lyapunov.cpp Lyapunov.h $(XHEADERS)	
 	$(CC) $(CFLAGS) -c Lyapunov.cpp

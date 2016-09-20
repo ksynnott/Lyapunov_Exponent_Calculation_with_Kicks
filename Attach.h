@@ -68,8 +68,6 @@ static double KickTime = 20.0;
 
 #include "GramSchmidt.h"
 #include "RungeKutta.h"
-#include "LocMax.h"
-#include "BifurcationDiagram.h"
 #include "Lyapunov.h"
 
 
