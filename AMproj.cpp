@@ -22,6 +22,10 @@ vector<double> ClassBPlanerWithJacobian(vector<double> ENvec, double k);
 vector<long double> ClassBPlanerWithJacobian_ld(vector<long double> ENvec);
 vector<long double> ClassCPlanerWithJacobian_ld(vector<long double> ENvec);
 
+// Here are the updated systems with forcing included in the Jacobian
+// when doing the linearization. 
+vector<double> ClassCPlanerWithJacobian(vector<double> ENvec, double Kick_Size, int NumPet, double Time_Between_Kicks);
+
 
 int main(){
 
@@ -260,6 +264,69 @@ vector<long double> ClassBPlanerWithJacobian_ld(vector<long double> ENvec){
 	return f;
 	
 }
+
+//****************************************************************************************
+
+vector<double> ClassCPlanerWithJacobian(vector<double> ENvec, double Kick_Size, int NumPet, double Time_Between_Kicks, int Current_Step){
+	
+	vector<double> f(10);
+	
+	//Figure out the Time_Between_Kicks in terms of time steps
+	int TimeStep = (Time_Between_Kicks)/dt;
+	
+	int delta = 0;
+	if( Current_Step%TimeStep == 0 )
+		delta = 1;
+	
+	// From Documentation "Linearization/Linearization.pdf" I am including the functions f_x(T) and f_y(T)
+	double phi = arctan(ENvec[1]/ENvec[0]);
+	double f_x = Kick_Size*cos(phi)*sin(phi*NumPet)*delta;
+	double f_y = Kick_Size*sin(phi)*sin(phi*NumPet)*delta;
+	
+	// Here the dx/dt = f(x)	
+	f[0] = - ENvec[0] - Dp*ENvec[1] - ENvec[3] + f_x;
+	f[1] = - ENvec[1] + Dp*ENvec[0] + ENvec[2] + f_y;
+	f[2] = Gpc*( -1*ENvec[2] + Dp*ENvec[3] + ENvec[1]*ENvec[4] );
+	f[3] = Gpc*( -1*ENvec[3] - Dp*ENvec[2] - ENvec[0]*ENvec[4] );
+	f[4] = Gnc*( Lambda - ENvec[4] + ENvec[3]*ENvec[0] - ENvec[2]*ENvec[1] );
+	
+	
+	// Again from Documentation "Linearization/Linearization.pdf" I am including the necessary differentials of f_x(T) and f_y(T)
+	Dphi_Ex = (-ENvec[1])/( ENvec[0]*ENvec[0] + ENvec[1]*ENvec[1] );
+	Dphi_Ey = ( ENvec[0])/( ENvec[0]*ENvec[0] + ENvec[1]*ENvec[1] )
+	
+	double Df_xx = Dphi_Ex*Kick_Size*( NumPet*cos(phi)*cos(phi*NumPet) - sin(phi)*sin(phi*NumPet) );
+	double Df_xy = Dphi_Ey*Kick_Size*( NumPet*cos(phi)*cos(phi*NumPet) - sin(phi)*sin(phi*NumPet) );
+	double Df_yx = Dphi_Ex*Kick_Size*( NumPet*sin(phi)*cos(phi*NumPet) + cos(phi)*sin(phi*NumPet) );
+	double Df_yy = Dphi_Ey*Kick_Size*( NumPet*sin(phi)*cos(phi*NumPet) + cos(phi)*sin(phi*NumPet) );
+	
+	// Jacobian 
+	f[5] = (-1.0 + Df_xx)ENvec[5] + (-1.0*Dp + Df_yx)*ENvec[6] - ENvec[8];
+	f[6] = (Dp + Df_yx)*ENvec[5] +  (-1.0 + Df_yy)*ENvec[6] + ENvec[7];
+	
+	f[7] = Gpc*(   ENvec[4]*ENvec[6] - ENvec[7] + Dp*ENvec[8] + ENvec[1]*ENvec[9] );
+	f[8] = Gpc*( - ENvec[4]*ENvec[5] - Dp*ENvec[7] - ENvec[8] - ENvec[0]*ENvec[9] );
+	
+	f[9] = Gnc*(   ENvec[3]*ENvec[5] - ENvec[2]*ENvec[6] - ENvec[1]*ENvec[7] +
+				   ENvec[0]*ENvec[8] - ENvec[9] );
+	
+	f[0] = EquScal*f[0];
+	f[1] = EquScal*f[1];
+	f[2] = EquScal*f[2];
+	f[3] = EquScal*f[3];
+	f[4] = EquScal*f[4];
+	
+	f[5] = EquScal*f[5];
+	f[6] = EquScal*f[6];
+	f[7] = EquScal*f[7];
+	f[8] = EquScal*f[8];
+	f[9] = EquScal*f[9];
+	
+	
+	return f;
+	
+}
+
 
 //****************************************************************************************
 
