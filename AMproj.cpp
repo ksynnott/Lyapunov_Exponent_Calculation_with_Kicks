@@ -358,8 +358,8 @@ vector<double> ClassBPlanerWithJacobian(vector<double> ENvec, int Current_Step, 
 	double Dphi_Ey = ( ENvec[0])/( ENvec[0]*ENvec[0] + ENvec[1]*ENvec[1] );
 	
 	double Df_xx = Dphi_Ex*Kick_Size*( NumPet*cos(phi)*cos(phi*NumPet) - sin(phi)*sin(phi*NumPet) );
-	double Df_xy = Dphi_Ey*Kick_Size*( NumPet*cos(phi)*cos(phi*NumPet) - sin(phi)*sin(phi*NumPet) );
-	double Df_yx = Dphi_Ex*Kick_Size*( NumPet*sin(phi)*cos(phi*NumPet) + cos(phi)*sin(phi*NumPet) );
+	double Df_xy = Dphi_Ey*Kick_Size*( NumPet*cos(phi)*cos(phi*NumPet) - sin(phi)*sin(phi*NumPet) ); // d/d(Ey) fx(T)
+	double Df_yx = Dphi_Ex*Kick_Size*( NumPet*sin(phi)*cos(phi*NumPet) + cos(phi)*sin(phi*NumPet) ); // d/d(Ex) fy(T)
 	double Df_yy = Dphi_Ey*Kick_Size*( NumPet*sin(phi)*cos(phi*NumPet) + cos(phi)*sin(phi*NumPet) );
 	
 	// Jacobian
@@ -369,7 +369,6 @@ vector<double> ClassBPlanerWithJacobian(vector<double> ENvec, int Current_Step, 
 	 
 	f[3] = (alf + Df_xx)*ENvec[3] + (Dp*alf + Df_xy)*ENvec[4] + (ENvec[0] + Dp*ENvec[1])*Lor*ENvec[5];
 	f[4] = (-Dp*alf + Df_yx)*ENvec[3] + (alf + Df_yy)*ENvec[4] + (ENvec[1] - Dp*ENvec[0])*Lor*ENvec[5];
-	
 	f[5] = -Gnc*( 2.0*ENvec[0]*ENvec[2]*Lor*ENvec[3] + 2.0*ENvec[1]*ENvec[2]*Lor*ENvec[4] + ENvec[5] + EEE*Lor*ENvec[5] );
 	
 	f[0] = EquScal*f[0];
