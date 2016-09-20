@@ -1,10 +1,6 @@
 #include "Attach.h"
 
-
-vector <double> LaserEquation(vector <double> ENvec, double K);
-vector <double> JacobianTimesPLaserEquation(vector <double> ENvec, vector <double> p);
-vector <double> LaserWithJacobian(vector <double> ENPvec, double K);
-vector <double> RosslerEquation(vector <double> ENvec, double K);
+// Helper Functions
 void OutMat(vector <vector <double> > Mat);
 void OutVec(vector <double> Vec);
 void Matoutfile(vector <vector <double> > Mat ,std::string filename);
@@ -14,10 +10,11 @@ static inline void loadbarMain(unsigned int x, unsigned int n, unsigned int w);
 static inline void loadbarMain(unsigned int x, unsigned int n, unsigned int w, clock_t start);
 vector <double> normalize(vector<double> v);
 
-
+// Set the parameters - important
 void SetParameters(string filename);
 void ExecuteScaling();
 
+// The various systems with Jacobian
 vector<double> ClassCPlaner(vector<double> ENvec, double k);
 vector<double> ClassCPlanerWithJacobian(vector<double> ENvec, double k);
 vector<double> ClassBPlaner(vector<double> ENvec, double k);
@@ -51,7 +48,7 @@ int main(){
 		cout << "Total Number of steps:  " << NumOfNorm*NormStep << endl;
 
 		int vecsize = 3;			
-		vector <double> p0(vecsize);				vector <double> y0(vecsize);
+		vector <double> p0(vecsize);			vector <double> y0(vecsize);
 		p0[0] = -0.00001;						y0[0] = -2.1;
 		p0[1] = -0.00001;						y0[1] = 2.1;
 		p0[2] = -0.00001;						y0[2] = 5.1;
@@ -312,112 +309,6 @@ void ExecuteScaling(){
 
 //****************************************************************************************
 
-vector <double> LaserEquation(vector <double> ENvec, double K){
-	// Input: Vector ENvec corresponding to y(t) = (Ex, Ey, N) at some time t
-	// 		  Varying parameter K.	
-
-	// Output: Vector f(y,t), explained below 
-	
-	// Solving the following laser equation
-	// dE/dt = i*Delta*E + beta*gamma*(1 - i*alpha)*N*E + K
-	// dN/dt = lambda - N - (1 + beta*N_n)|E|^2
-
-	// Which when you resolve into the its real and complex parts gives 
-	// dEx/dt = - DeltaEy + beta*gamma*N*(Ex + alpha*Ey) + K
-	// dEy/dt = DeltaEx + beta*gamma*N*(Ey - alpha*Ex)
-	// dN/dt = lambda - N - (1 + beta*N_n)*(Ex^2 + Ey^2)
-	
-	// No we have an equation dy/dt = f(y,t) where 
-	// y = (Ex, Ey, N) and f(y,t) is given by the above equations.
-	// Thus we can solve for f(y,t). Where y = Evec.
-	
-	double f0 = - Delta*ENvec[1] + beta*smallgamma*ENvec[2]*(ENvec[0] + alpha*ENvec[1]) + K;
-	double f1 = Delta*ENvec[0] + beta*smallgamma*ENvec[2]*(ENvec[1] - alpha*ENvec[0]);
-	double f2 = lambda - ENvec[2] - ((1 + beta*ENvec[2])*(ENvec[0]*ENvec[0] + ENvec[1]*ENvec[1]));
-
-	vector <double> fyt(3);
-	fyt[0] = f0;
-	fyt[1] = f1;
-	fyt[2] = f2;
-
-	return fyt;
-}
-
-vector <double> JacobianTimesPLaserEquation(vector <double> ENvec, vector <double> p){
-	// Here is the Jacobian of the Laser equation Df(x(t,x0))
-	// Input: x at some time t with p
-	// Output: The Jacobian Matrix
-	
-	double N = 3; // Known from Laser Equation
-	double M = 3;
-	
-	vector <vector <double> > Df(N, vector<double> (M));
-	
-	// Column 0
-	Df[0][0] = beta*smallgamma*ENvec[2];
-	Df[1][0] = -1*alpha*beta*smallgamma*ENvec[2];
-	Df[2][0] = -2*(1 + (beta*ENvec[2]))*ENvec[0];
-	
-	// Column 1
-	Df[0][1] = alpha*beta*smallgamma*ENvec[2];
-	Df[1][1] = beta*smallgamma*ENvec[2];
-	Df[2][1] = -2*(1 + (beta*ENvec[2]))*ENvec[1];
-	
-	// Column 2
-	Df[0][2] = beta*smallgamma*(ENvec[0] + alpha*ENvec[1]);
-	Df[1][2] = beta*smallgamma*(ENvec[1] - alpha*ENvec[0]);
-	Df[2][2] = -1 - beta*(ENvec[0]*ENvec[0] + ENvec[1]*ENvec[1]);
-	
-	vector <double> Dfp(N);
-	Dfp[0] = Df[0][0]*p[0] + Df[0][1]*p[1] + Df[0][2]*p[2]; 
-	Dfp[1] = Df[1][0]*p[0] + Df[1][1]*p[1] + Df[1][2]*p[2]; 
-	Dfp[2] = Df[2][0]*p[0] + Df[2][1]*p[1] + Df[2][2]*p[2]; 
-	
-	//OutVec(Dfp);
-	
-	return Dfp;
-}
-
-vector <double> LaserWithJacobian(vector <double> ENPvec, double K){
-
-// Input the Vector Corresponding to Electric Field and Number of hole pairs and the displacement vector
-// 		 And the Changing parameter
-
-// Output The vector corresponding to f(x,K) and the Jacobian
-	
-	vector<double> DfD(6);
-
-	DfD[0] = -1.0*Delta*ENPvec[1] + beta*smallgamma*ENPvec[2]*(ENPvec[0] + alpha*ENPvec[1]) + K;
-	DfD[1] = Delta*ENPvec[0] + beta*smallgamma*ENPvec[2]*(ENPvec[1] - alpha*ENPvec[0]);
-	DfD[2] = lambda - ENPvec[2] - ((1 + beta*ENPvec[2])*(ENPvec[0]*ENPvec[0] + ENPvec[1]*ENPvec[1]));
-	
-	DfD[3] = beta*smallgamma*ENPvec[2]*ENPvec[3] + (-1.0*Delta + beta*smallgamma*ENPvec[2]*alpha)*ENPvec[4] + beta*smallgamma*(ENPvec[0] + alpha*ENPvec[1])*ENPvec[5];
-	DfD[4] = (Delta - alpha*beta*smallgamma*ENPvec[2])*ENPvec[3] + beta*smallgamma*ENPvec[2]*ENPvec[4] + beta*smallgamma*(ENPvec[1] - alpha*ENPvec[0])*ENPvec[5];
-	DfD[5] = -2.0*(1 + (beta*ENPvec[2]))*ENPvec[0]*ENPvec[3] - 2.0*(1+(beta*ENPvec[2]))*ENPvec[1]*ENPvec[4] + (-1.0 - beta*(ENPvec[0]*ENPvec[0] + ENPvec[1]*ENPvec[1]))*ENPvec[5];
-	
-	//OutVec(DfD);
-	//cout << K << endl;
-
-	return DfD;
-
-}
-
-vector <double> RosslerEquation(vector <double> ENvec, double K){
-	double c = 14.0;
-	double b = 0.1;
-	
-	double f0 = -(ENvec[1] + ENvec[2]);
-	double f1 = ENvec[0] + K*ENvec[1];
-	double f2 = b + ENvec[2]*(ENvec[0] - c);
-	
-	vector <double> f(3);
-	f[0] = f0;
-	f[1] = f1;
-	f[2] = f2;
-	
-	return f;
-	
-}
 
 void OutMat(vector <vector <double> > Mat){
 	for(int i = 0; i < Mat[0].size(); i++){
