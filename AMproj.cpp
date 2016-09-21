@@ -59,8 +59,8 @@ int main(){
 		int vecsize = 3;			
 		vector <double> p0(vecsize);			vector <double> y0(vecsize);
 		p0[0] = -0.00001;						y0[0] = -2.1;
-		p0[1] = -0.00001;						y0[1] = 2.1;
-		p0[2] = -0.00001;						y0[2] = 5.1;
+		p0[1] = -0.00001;						y0[1] = 1.5;
+		p0[2] = -0.00001;						y0[2] = 6.1;
 //		p0[3] = 0.001;						y0[3] = 2.0;
 //		p0[4] = 0.001;						y0[4] = 5.1;
 		 
@@ -72,7 +72,7 @@ int main(){
 		clock_t st = clock();
 		for(int i = 0; i < NumK; i++){
 			Lyapunov LyapLase(NormStep, dt, TransientTime, TimeEvlo, y0, p0);
-			h.push_back(LyapLase.CalcBigLypunov_Kick(ClassBPlanerWithJacobian_ld, InKick + i*dKick, Perturb ));
+			h.push_back(LyapLase.CalcBigLypunov_Kick_new(ClassBPlanerWithJacobian, InKick + i*dKick, Perturb ));
 			k.push_back(InKick + i*dKick);
 			
 			loadbarMain(i, NumK, 50, st);
@@ -336,6 +336,7 @@ vector<double> ClassBPlanerWithJacobian(vector<double> ENvec, int Current_Step, 
 	
 	vector<double> f(6);
 	
+	
 	//Figure out the Time_Between_Kicks in terms of time steps
 	int TimeStep = (Time_Between_Kicks)/dt;
 	
@@ -348,6 +349,11 @@ vector<double> ClassBPlanerWithJacobian(vector<double> ENvec, int Current_Step, 
 	double f_x = Kick_Size*cos(phi)*sin(phi*NumPet)*delta;
 	double f_y = Kick_Size*sin(phi)*sin(phi*NumPet)*delta;
 	
+	if(delta == 1){
+		
+		cout << "phi = " << (360.0/(2*PI))*phi << "  sin(NumPet*phi) = " << sin(phi*NumPet) << "   f_x = " << f_x << "    f_y = " << f_y <<  endl;
+	}
+	
 	// Here, the dx/dt = f(x)	
 	f[0] = ( (ENvec[2]/(1.0 + Dp*Dp)) - 1.0)*(ENvec[0] + Dp*ENvec[1]) + f_x;
 	f[1] = ( (ENvec[2]/(1.0 + Dp*Dp)) - 1.0)*(ENvec[1] - Dp*ENvec[0]) + f_y;
@@ -357,10 +363,10 @@ vector<double> ClassBPlanerWithJacobian(vector<double> ENvec, int Current_Step, 
 	double Dphi_Ex = (-ENvec[1])/( ENvec[0]*ENvec[0] + ENvec[1]*ENvec[1] );
 	double Dphi_Ey = ( ENvec[0])/( ENvec[0]*ENvec[0] + ENvec[1]*ENvec[1] );
 	
-	double Df_xx = Dphi_Ex*Kick_Size*( NumPet*cos(phi)*cos(phi*NumPet) - sin(phi)*sin(phi*NumPet) );
-	double Df_xy = Dphi_Ey*Kick_Size*( NumPet*cos(phi)*cos(phi*NumPet) - sin(phi)*sin(phi*NumPet) ); // d/d(Ey) fx(T)
-	double Df_yx = Dphi_Ex*Kick_Size*( NumPet*sin(phi)*cos(phi*NumPet) + cos(phi)*sin(phi*NumPet) ); // d/d(Ex) fy(T)
-	double Df_yy = Dphi_Ey*Kick_Size*( NumPet*sin(phi)*cos(phi*NumPet) + cos(phi)*sin(phi*NumPet) );
+	double Df_xx = Dphi_Ex*Kick_Size*( NumPet*cos(phi)*cos(phi*NumPet) - sin(phi)*sin(phi*NumPet) )*delta;
+	double Df_xy = Dphi_Ey*Kick_Size*( NumPet*cos(phi)*cos(phi*NumPet) - sin(phi)*sin(phi*NumPet) )*delta; // d/d(Ey) fx(T)
+	double Df_yx = Dphi_Ex*Kick_Size*( NumPet*sin(phi)*cos(phi*NumPet) + cos(phi)*sin(phi*NumPet) )*delta; // d/d(Ex) fy(T)
+	double Df_yy = Dphi_Ey*Kick_Size*( NumPet*sin(phi)*cos(phi*NumPet) + cos(phi)*sin(phi*NumPet) )*delta;
 	
 	// Jacobian
 	double alf = (ENvec[2]/(1 + Dp*Dp)) - 1.0;

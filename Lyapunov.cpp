@@ -372,6 +372,12 @@ double Lyapunov::CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> v
 		XP = RunKut.RK4_11(f_yt, XP, (Kicktime+1), kicksize, Kicktime);
 	}
 	
+	cout << "E_x = " << XP[0] << endl;
+	cout << "E_y = " << XP[1] << endl;
+	cout << "N   = " << XP[2] << endl;
+	cout << "|E| = " << sqrt(XP[0]*XP[0] + XP[1]*XP[1]) << endl;
+	cout << "A = " << sqrt(Lambda - 1 - Dp*Dp) << endl;
+	
 	
 	//Renormalize p
 	for(int i = xsize; i < xsize+psize; i++){
@@ -391,10 +397,13 @@ double Lyapunov::CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> v
 	int NumT = 0;
 	vector<double> al; 
 	
+	int kickstep = (int)(Kicktime/dt);
+	cout << "Kick Step = " << kickstep << endl;
+	
 	// Run . . . 
 	for(int i = 0; i <= steps; i++){
-		XP = RunKut.RK4_11(f_yt, XP, i, kicksize, Kicktime);
 		
+		XP = RunKut.RK4_11(f_yt, XP, i, kicksize, Kicktime);
 		
 		// For the step we choose, get norm of p then normalise
 		if((i%m == 0 && i > 1)){
