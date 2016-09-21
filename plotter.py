@@ -1,24 +1,68 @@
 import matplotlib as mpl
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
+import math as ma
 import matplotlib.pyplot as plt
 
 from numpy import *
 
-data = loadtxt("RungeKutta.txt")
-data = transpose(data)
+Lam = 10
+Dp  = 2
+
+Am = ma.sqrt(Lam - 1 - Dp*Dp)
+Nn = 1 + Dp*Dp
+
+data = loadtxt("AddedValues.txt")
+
+print data.size
+print data[0].size
+
+Nd = data[0].size
+
+x  = np.linspace(0, 2*np.pi, Nd)
+zz = np.linspace(Nn, Nn, Nd)
+xx = Am*np.sin(x)
+yy = Am*np.cos(x)
+
+#data = transpose(data)
 
 mpl.rcParams['legend.fontsize'] = 10
 fig = plt.figure()
 ax = fig.gca(projection='3d')
-ax.plot(data[0], data[1], data[2], label='K = 20.0')
+ax.plot(data[0], data[1], data[2], '-g')
+ax.plot(xx, yy, zz, '-r')
+#ax.plot(data[3], data[4], data[5])
 ax.set_xlabel('Ex')
 ax.set_ylabel('Ey')
 ax.set_zlabel('N')
-ax.legend()
 
 plt.show()
 
+plt.plot(data[0], data[1], '-g')
+plt.plot(data[0][0], data[1][0], '+g', mew=5, ms=10)
+plt.plot(xx, yy, '-r')
+plt.show()
+
+"""
+data = loadtxt("bois.txt")
+#data = transpose(data)
+
+mpl.rcParams['legend.fontsize'] = 10
+fig = plt.figure()
+ax = fig.gca(projection='3d')
+ax.plot(data[0], data[1], data[2])
+ax.set_xlabel('Ex')
+ax.set_ylabel('Ey')
+ax.set_zlabel('N')
+
+plt.show()
+
+plt.plot(data[0], data[1])
+plt.show()
+
+"""
+
+"""
 mpl.rcParams['legend.fontsize'] = 10
 fig = plt.figure()
 ax = fig.gca(projection='3d')
@@ -52,3 +96,4 @@ plt.scatter(data2[0], data2[1], s=2, facecolor='0.0', lw = 0)
 plt.ylabel('Max')
 plt.xlabel('Time')
 plt.show()
+"""

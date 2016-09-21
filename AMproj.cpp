@@ -349,11 +349,6 @@ vector<double> ClassBPlanerWithJacobian(vector<double> ENvec, int Current_Step, 
 	double f_x = Kick_Size*cos(phi)*sin(phi*NumPet)*delta;
 	double f_y = Kick_Size*sin(phi)*sin(phi*NumPet)*delta;
 	
-	if(delta == 1){
-		
-		cout << "phi = " << (360.0/(2*PI))*phi << "  sin(NumPet*phi) = " << sin(phi*NumPet) << "   f_x = " << f_x << "    f_y = " << f_y <<  endl;
-	}
-	
 	// Here, the dx/dt = f(x)	
 	f[0] = ( (ENvec[2]/(1.0 + Dp*Dp)) - 1.0)*(ENvec[0] + Dp*ENvec[1]) + f_x;
 	f[1] = ( (ENvec[2]/(1.0 + Dp*Dp)) - 1.0)*(ENvec[1] - Dp*ENvec[0]) + f_y;

@@ -10,6 +10,7 @@ void OutMatLy(vector <vector <long double> > Mat);
 void OutVecLy(vector <double> Vec);
 void OutVecLy(vector <long double> Vec);
 void TwoVecoutfile(vector <double> vec1, vector <double> vec2 ,std::string filename);
+void MatoutfileLy(vector <vector <double> > Mat ,std::string filename);
 
 
 //Public
@@ -353,6 +354,8 @@ double Lyapunov::CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> v
 	vector<double> XP( xsize + psize );
 	vector<double> P(psize);
 	
+	
+		
 	// Initialise vector XP
 	for(int i = 0; i < (int)XP.size(); i++){
 		if(i < xsize)
@@ -378,7 +381,6 @@ double Lyapunov::CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> v
 	cout << "|E| = " << sqrt(XP[0]*XP[0] + XP[1]*XP[1]) << endl;
 	cout << "A = " << sqrt(Lambda - 1 - Dp*Dp) << endl;
 	
-	
 	//Renormalize p
 	for(int i = xsize; i < xsize+psize; i++){
 		P[i - xsize] = XP[i];
@@ -393,18 +395,30 @@ double Lyapunov::CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> v
 	// Now that we are on the attractor we can run, looking for the growth of p
 	steps = (TimeEvlo)/dt; // How many steps in total
 	
+	vector< vector<double> > XX(3, vector<double> (1) );
+	
+	XX[0][0] = XP[0];
+	XX[1][0] = XP[1];
+	XX[2][0] = XP[2];
+	
 	count = 0;
 	int NumT = 0;
 	vector<double> al; 
 	
 	int kickstep = (int)(Kicktime/dt);
 	cout << "Kick Step = " << kickstep << endl;
+	cout << "Steps = " << steps  << endl;
 	
 	// Run . . . 
 	for(int i = 0; i <= steps; i++){
 		
 		XP = RunKut.RK4_11(f_yt, XP, i, kicksize, Kicktime);
 		
+		if(count < 39){
+			for(int u = 0; u < 3; u++){
+				XX[u].push_back(XP[u]);
+			}
+		}
 		// For the step we choose, get norm of p then normalise
 		if((i%m == 0 && i > 1)){
 			
@@ -426,6 +440,11 @@ double Lyapunov::CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> v
 			}
 		}
 	}
+	
+	MatoutfileLy(XX ,"AddedValues.txt");
+	int Stophere = 0;
+	cout << "Stop here:";
+	cin >> Stophere;
 	
 	// Calculate Lyapunov Exponent
 	double LyapExp = 0.0;
@@ -913,7 +932,24 @@ void TwoVecoutfile(vector <double> vec1, vector <double> vec2 ,std::string filen
 	ofile.close();
 }
 
-
+void MatoutfileLy(vector <vector <double> > Mat ,std::string filename){
+	
+	std::ofstream ofile(filename, std::ios::out);
+	
+	ofile.precision(15);
+	
+	cout << (int)Mat.size() << endl;
+	cout << (int)Mat[0].size() << endl;
+	
+	for(int i = 0; i < (int)Mat.size(); i++)
+	{
+		for(int j = 0; j < (int)Mat[0].size(); j++){
+			ofile << Mat[i][j] << " ";
+		}
+		ofile << "\n";	
+	}
+	ofile.close();
+}
 
 
 
