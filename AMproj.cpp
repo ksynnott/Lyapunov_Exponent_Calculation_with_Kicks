@@ -18,27 +18,26 @@ void ExecuteScaling();
 // when doing the linearization. 
 vector<double> ClassCPlanerWithJacobian(vector<double> ENvec, int Current_Step, double Kick_Size, double Time_Between_Kicks);
 
+
 vector<double> ClassBPlanerWithJacobian(vector<double> ENvec);
 vector<double> ClassBPlanerWithJacobian_Kicking_Instance(vector<double> ENvec, double Kick_Size);
+
+vector<long double> ClassBPlanerWithJacobian(vector<long double> ENvec);
+vector<long double> ClassBPlanerWithJacobian_Kicking_Instance(vector<long double> ENvec, double Kick_Size);
 
 
 // Need a get phi function as this can be tricky as atan function wont deal with the full circle
 double GetPhi(vector<double> ENvec);
+long double GetPhi(vector<long double> ENvec);
 
 int main(){
 
 	cout << "Start the clock !!!\n";
 	clock_t t = clock();
 		
-	vector <double> y0(3);
-	y0[0] = 0.1;
-	y0[1] = 2.1;
-	y0[2] = 5.1;
 	
 	SetParameters("Parameters.txt");
-	cout << " dt = " << dt << endl;
 	ExecuteScaling();
-	cout << " dt = " << dt << endl;
 	
 //****************************************************************************************
 
@@ -50,14 +49,17 @@ int main(){
 		cout << "Total Number of steps:  " << NumOfNorm*NormStep << endl;
 
 		int vecsize = 3;			
-		vector <double> p0(vecsize);			vector <double> y0(vecsize);
+		/*vector <double> p0(vecsize);			vector <double> y0(vecsize);
 		p0[0] = -0.00001;						y0[0] = -2.1;
 		p0[1] = -0.00001;						y0[1] = 1.5;
-		p0[2] = -0.00001;						y0[2] = 6.1;
+		p0[2] = -0.00001;						y0[2] = 6.1;*/
 //		p0[3] = 0.001;						y0[3] = 2.0;
 //		p0[4] = 0.001;						y0[4] = 5.1;
 		 
-		 
+		vector <long double> p0(vecsize);			vector <long double> y0(vecsize);
+		p0[0] = -0.00001;							y0[0] = -2.1;
+		p0[1] = -0.00001;							y0[1] = 1.5;
+		p0[2] = -0.00001;							y0[2] = 6.1;
 		 
 		vector<double> h;
 		vector<double> k;
@@ -65,9 +67,9 @@ int main(){
 		clock_t st = clock();
 		for(int i = 0; i < NumK; i++){
 			Lyapunov LyapLase(NormStep, dt, TransientTime, TimeEvlo, y0, p0);
-			h.push_back(LyapLase.CalcBigLypunov_Kick_new(ClassBPlanerWithJacobian, ClassBPlanerWithJacobian_Kicking_Instance, InKick + i*dKick, Perturb ));
+			h.push_back(LyapLase.CalcBigLypunov_Kick_new_l(ClassBPlanerWithJacobian, ClassBPlanerWithJacobian_Kicking_Instance, InKick + i*dKick, Perturb ));
 			k.push_back(InKick + i*dKick);
-			
+			break;
 			loadbarMain(i, NumK, 50, st);
 			
 		}
@@ -188,7 +190,6 @@ vector<double> ClassBPlanerWithJacobian(vector<double> ENvec){
 	
 }
 
-
 vector<double> ClassBPlanerWithJacobian_Kicking_Instance(vector<double> ENvec, double Kick_Size){
 	
 	// From Documentation "Linearization/Linearization.pdf" I am including the functions f_x(T) and f_y(T)
@@ -207,6 +208,70 @@ vector<double> ClassBPlanerWithJacobian_Kicking_Instance(vector<double> ENvec, d
 	
 	
 	vector<double> f(6);
+	
+	f[0] = ENvec[0] + f_x;
+	f[1] = ENvec[1] + f_y;
+	f[2] = ENvec[2];
+	
+	f[3] = ENvec[3] + ENvec[3]*Df_xx + ENvec[4]*Df_xy;
+	f[4] = ENvec[4] + ENvec[3]*Df_yx + ENvec[4]*Df_yy;	
+	f[5] = ENvec[5];
+	
+	return f;
+
+}
+
+//****************************************************************************************
+
+vector<long double> ClassBPlanerWithJacobian(vector<long double> ENvec){
+	
+	vector<long double> f(6);
+	
+	// Here, the dx/dt = f(x)	
+	f[0] = ( (ENvec[2]/(1.0 + Dp*Dp)) - 1.0)*(ENvec[0] + Dp*ENvec[1]);
+	f[1] = ( (ENvec[2]/(1.0 + Dp*Dp)) - 1.0)*(ENvec[1] - Dp*ENvec[0]);
+	f[2] = Gnc*( Lambda - ENvec[2] - ((ENvec[0]*ENvec[0] + ENvec[1]*ENvec[1])*ENvec[2])/(1.0 + Dp*Dp));	
+	
+	// Jacobian
+	long double alf = (ENvec[2]/(1 + Dp*Dp)) - 1.0;
+	long double Lor = (1.0/(1.0 + Dp*Dp));
+	long double EEE = ENvec[0]*ENvec[0] + ENvec[1]*ENvec[1];
+	 
+	f[3] = (alf)*ENvec[3] + (Dp*alf)*ENvec[4] + (ENvec[0] + Dp*ENvec[1])*Lor*ENvec[5];
+	f[4] = (-Dp*alf)*ENvec[3] + (alf)*ENvec[4] + (ENvec[1] - Dp*ENvec[0])*Lor*ENvec[5];
+	f[5] = -Gnc*( 2.0*ENvec[0]*ENvec[2]*Lor*ENvec[3] + 2.0*ENvec[1]*ENvec[2]*Lor*ENvec[4] + ENvec[5] + EEE*Lor*ENvec[5] );
+	
+	f[0] = EquScal*f[0];
+	f[1] = EquScal*f[1];
+	f[2] = EquScal*f[2];
+	
+	f[3] = EquScal*f[3];
+	f[4] = EquScal*f[4];
+	f[5] = EquScal*f[5];
+	
+	
+	return f;
+	
+}
+
+vector<long double> ClassBPlanerWithJacobian_Kicking_Instance(vector<long double> ENvec, double Kick_Size){
+	
+	// From Documentation "Linearization/Linearization.pdf" I am including the functions f_x(T) and f_y(T)
+	long double phi = GetPhi(ENvec);
+	long double f_x = Kick_Size*cos(phi)*sin(phi*NumPet);
+	long double f_y = Kick_Size*sin(phi)*sin(phi*NumPet);
+	
+	// Again from Documentation "Linearization/Linearization.pdf" I am including the necessary differentials of f_x(T) and f_y(T)
+	long double Dphi_Ex = (-ENvec[1])/( ENvec[0]*ENvec[0] + ENvec[1]*ENvec[1] );
+	long double Dphi_Ey = ( ENvec[0])/( ENvec[0]*ENvec[0] + ENvec[1]*ENvec[1] );
+	
+	long double Df_xx = Dphi_Ex*Kick_Size*( NumPet*cos(phi)*cos(phi*NumPet) - sin(phi)*sin(phi*NumPet) );
+	long double Df_xy = Dphi_Ey*Kick_Size*( NumPet*cos(phi)*cos(phi*NumPet) - sin(phi)*sin(phi*NumPet) ); // d/d(Ey) fx(T)
+	long double Df_yx = Dphi_Ex*Kick_Size*( NumPet*sin(phi)*cos(phi*NumPet) + cos(phi)*sin(phi*NumPet) ); // d/d(Ex) fy(T)
+	long double Df_yy = Dphi_Ey*Kick_Size*( NumPet*sin(phi)*cos(phi*NumPet) + cos(phi)*sin(phi*NumPet) );
+	
+	
+	vector<long double> f(6);
 	
 	f[0] = ENvec[0] + f_x;
 	f[1] = ENvec[1] + f_y;
@@ -269,6 +334,27 @@ void ExecuteScaling(){
 //****************************************************************************************
 
 double GetPhi(vector<double> ENvec){
+	
+	double phi = fabs(atan(ENvec[1]/ENvec[0]));
+	
+	if(ENvec[0] == 0){
+		if(ENvec[1] > 0 )
+			return PI/2.0;
+		else
+			return 3*PI/2.0;
+	}
+	else if( ENvec[0] > 0 && ENvec[1] >= 0 )
+		return phi;
+	else if( ENvec[0] < 0 && ENvec[1] >= 0 )
+		return PI - phi;
+	else if( ENvec[0] < 0 && ENvec[1] <= 0 )
+		return PI + phi;
+	else 
+		return 2*PI - phi;
+	
+}
+
+long double GetPhi(vector<long double> ENvec){
 	
 	double phi = fabs(atan(ENvec[1]/ENvec[0]));
 	

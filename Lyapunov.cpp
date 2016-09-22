@@ -33,7 +33,21 @@ Lyapunov::Lyapunov(int NormalSteps, double TimeStepSize, double TransientTime, d
 	
 	x = y0;
 	p = p0;
+	
 }
+
+Lyapunov::Lyapunov(int NormalSteps, double TimeStepSize, double TransientTime, double TimeEvolution, vector<long double> y0, vector<long double> p0){
+	N = (int)y0.size();
+	m =  NormalSteps;
+	dt = TimeStepSize;
+	Tran = TransientTime;
+	TimeEvlo = TimeEvolution;
+	tol = 0.0001;
+	
+	xl = y0;
+	pl = p0;
+}
+
 
 Lyapunov::Lyapunov(int NormalSteps, double TimeStepSize, double TransientTime, double TimeEvolution, vector<double> y0, vector<vector<double> > p0){
 	N = (int)y0.size();
@@ -48,87 +62,7 @@ Lyapunov::Lyapunov(int NormalSteps, double TimeStepSize, double TransientTime, d
 }
 
 
-
-double Lyapunov::CalcBigLypunov(vector<double> (*f_yt)(vector <double> vec, double param), double K){
-	
-	int xsize = (int)x.size();
-	int psize = (int)p.size();
-	vector<double> XP( xsize + psize );
-	
-	for(int i = 0; i < (int)XP.size(); i++){
-		if(i < xsize)
-			XP[i] = x[i];
-		else
-			XP[i] = p[i - xsize];
-	}
-	
-	//OutVecLy(XP);
-	
-	// Iterate long enough to insure x is in attractor.
-	int steps = Tran/dt;
-	RungeKutta RunKut(steps, dt);
-	int count = 0;
-	
-	
-	for(int i = 0; i < steps; i++){
-		XP = RunKut.RK4_11(f_yt, XP, K);
-	}
-	
-	//Renormalize p
-	for(int i = xsize; i < xsize+psize; i++){
-		p[i - xsize] = XP[i];
-	}
-	p = normalize(p);
-	for(int i = xsize; i < xsize+psize; i++){
-		XP[i] = p[i - xsize];
-	}
-	
-	
-	steps = (TimeEvlo - Tran)/dt;
-	count = 0;
-	int NumT = 0;
-	vector<double> al; 
-
-	
-	for(int i = 0; i <= steps; i++){
-		XP = RunKut.RK4_11(f_yt, XP, K);
-		
-		if((i%m == 0 && i > 1)){
-			
-			for(int g = xsize; g < xsize+psize; g++){
-				p[g - xsize] = XP[g];
-			}
-			
-			NumT = m + NumT;
-			count = count + 1;
-			
-			double tmp1 = 1/((double)(m*dt));
-			double tmp2 = GetNorm(p); 
-			
-			
-			al.push_back(tmp1*log(tmp2));
-		
-			p = normalize(p);
-			for(int g = xsize; g < xsize+psize; g++){
-				XP[g] = p[g - xsize];
-			}
-			
-		}
-		
-	}
-	
-	double LyapExp = 0.0;
-	for(int i = 0; i < (int)(al.size()); i++){
-		LyapExp = (LyapExp + al[i]);
-	}
-	
-	//LookForConvergence(m,  al);
-	
-	return (1/(double)(al.size() ))*LyapExp;
-	
-}
-
-vector<double> Lyapunov::CalcManyLypunov(vector<double> (*f_yt)(vector <double> vec, double param), double K){
+/*vector<double> Lyapunov::CalcManyLypunov(vector<double> (*f_yt)(vector <double> vec, double param), double K){
 	
 	int xsize = (int)x.size();
 	int psize = (int)pvol.size();
@@ -244,117 +178,23 @@ vector<double> Lyapunov::CalcManyLypunov(vector<double> (*f_yt)(vector <double> 
 		
 	return LyapExp;
 	
-}
-
-double Lyapunov::CalcBigLypunov_Kick(vector<long double> (*f_yt)(vector <long double> vec), double Kicktime, double kicksize){
-	
-	int xsize = (int)x.size();
-	int psize = (int)p.size();
-	vector<long double> XP( xsize + psize );
-	vector<long double> P(psize);
-	
-	// Initialise vector XP
-	for(int i = 0; i < (int)XP.size(); i++){
-		if(i < xsize)
-			XP[i] = (long double)x[i];
-		else
-			XP[i] = (long double)p[i - xsize];
-	}
-	
-	
-	// Iterate long enough to insure x is in attractor
-	int steps = Tran/dt;
-	RungeKutta RunKut(steps, dt);
-	int count = 0;
-	
-	for(int i = 0; i < steps; i++){
-		XP = RunKut.RK4_ld(f_yt, XP);
-	}
-	
-	
-	//Renormalize p
-	for(int i = xsize; i < xsize+psize; i++){
-		P[i - xsize] = XP[i];
-	}
-	
-	P = normalize(P);
-	
-	for(int i = xsize; i < xsize+psize; i++){
-		XP[i] = P[i - xsize];
-	}
-	
-	// Now that we are on the attractor we can run, looking for the growth of p
-	steps = (TimeEvlo)/dt; // How many steps in total
-	
-	count = 0;
-	int NumT = 0;
-	vector<double> al; 
-	
-	int Kickstep =  (int)(Kicktime/dt); // The kickstep !!Want to get rid of soon!!
-	
-	cout << "Kicktime = " << Kicktime << endl;
-	cout << "Kicksize = " << kicksize << endl; 
-	
-	// Run . . . 
-	for(int i = 0; i <= steps; i++){
-		XP = RunKut.RK4_ld(f_yt, XP);
-		
-		// Want to get rid of this
-		if( i%Kickstep == 0 && i > 0 ){
-			//cout << "hi" << endl;
-			if(xsize == 5){
-				XP = KICK_C(XP, kicksize);
-			}
-			else{
-				XP = KICK_B(XP, kicksize);
-				XP = KICK_B_Pert(XP, kicksize);
-			}
-		}
-		
-		
-		// For the step we choose, get norm of p then normalise
-		if((i%m == 0 && i > 1)){
-			
-			for(int g = xsize; g < xsize+psize; g++){
-				P[g - xsize] = XP[g];
-			}
-			
-			NumT = m + NumT;   // Keep track
-			count = count + 1; // Keep track
-			
-			double tmp1 = 1/((double)(m*dt));
-			double tmp2 = GetNorm(P); 
-			
-			al.push_back(tmp1*log(tmp2)); // Vector holding the growth of p for this run
-			
-			P = normalize(P);
-			for(int g = xsize; g < xsize+psize; g++){
-				XP[g] = P[g - xsize];
-			}
-		}
-	}
-	
-	// Calculate Lyapunov Exponent
-	double LyapExp = 0.0;
-	for(int i = 0; i < (int)(al.size()); i++){
-		LyapExp = (LyapExp + al[i]);
-	}
-	
-	LookForConvergence(m,  al);
-	
-	return (1/(double)(al.size() ))*LyapExp;
-	
-}
+}*/
 
 
 double Lyapunov::CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> vec), vector<double> (*k_yt)(vector<double> vec, double KickSize), double Kicktime, double kicksize){
 	
+	cout << "Here - 0" << endl;
+	
 	int xsize = (int)x.size();
 	int psize = (int)p.size();
+	
+	cout << xsize << endl;
+	cout << psize << endl;
+	
 	vector<double> XP( xsize + psize );
 	vector<double> P(psize);
 	
-	
+	cout << xsize << endl;
 		
 	// Initialise vector XP
 	for(int i = 0; i < (int)XP.size(); i++){
@@ -363,7 +203,7 @@ double Lyapunov::CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> v
 		else
 			XP[i] = (double)p[i - xsize];
 	}
-	
+	cout << "Here" << endl;
 	
 	// Iterate long enough to insure x is in attractor
 	int steps = Tran/dt;
@@ -463,6 +303,121 @@ double Lyapunov::CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> v
 	return (1/(double)(al.size() ))*LyapExp;
 	
 }
+
+
+double Lyapunov::CalcBigLypunov_Kick_new_l(vector<long double> (*f_yt)(vector<long double> vec), vector<long double> (*k_yt)(vector<long double> vec, double KickSize), double Kicktime, double kicksize){
+	
+	int xsize = (int)xl.size();
+	int psize = (int)pl.size();
+	vector<long double> XP( xsize + psize );
+	vector<long double> P(psize);
+		
+	// Initialise vector XP
+	for(int i = 0; i < (int)XP.size(); i++){
+		if(i < xsize)
+			XP[i] = xl[i];
+		else
+			XP[i] = pl[i - xsize];
+	}
+	
+	// Iterate long enough to insure x is in attractor
+	int steps = Tran/dt;
+	RungeKutta RunKut(steps, dt);
+	
+	for(int i = 0; i < steps; i++){
+		XP = RunKut.RK4_11_long(f_yt, XP);
+	}
+	cout << "here" << endl;
+	// Just as a method of checking
+	cout << "E_x = " << XP[0] << endl;
+	cout << "E_y = " << XP[1] << endl;
+	cout << "N   = " << XP[2] << endl;
+	cout << "|E| = " << sqrt(XP[0]*XP[0] + XP[1]*XP[1]) << endl;
+	cout << "A = " << sqrt(Lambda - 1 - Dp*Dp) << endl;
+	
+	//Renormalize p
+	for(int i = xsize; i < xsize+psize; i++){
+		P[i - xsize] = XP[i];
+	}
+	
+	P = normalize(P);
+	
+	for(int i = xsize; i < xsize+psize; i++){
+		XP[i] = P[i - xsize];
+	}
+	
+	// Now that we are on the attractor we can run, looking for the growth of p
+	steps = (TimeEvlo)/dt; // How many steps in total
+	
+	//vector< vector<double> > XX(3, vector<double> (1) );
+	
+	//XX[0][0] = XP[0];
+	//XX[1][0] = XP[1];
+	//XX[2][0] = XP[2];
+	
+	int NumT = 0;
+	vector<double> al; 
+	
+	int kickstep = (int)(Kicktime/dt);
+	
+	// Run . . . 
+	for(int i = 0; i <= steps; i++){
+		
+		XP = RunKut.RK4_11_long(f_yt, XP);
+		
+		if( i%kickstep == 0 ){
+			XP = k_yt(XP, kicksize);
+		}
+		
+		/*if(i < 15*kickstep){
+			for(int u = 0; u < 3; u++){
+				XX[u].push_back(XP[u]);
+			}
+		}
+		else{
+			
+			break;
+		}*/
+		
+		
+		// For the step we choose, get norm of p then normalise
+		if((i%m == 0 && i > 1)){
+			
+			for(int g = xsize; g < xsize+psize; g++){
+				P[g - xsize] = XP[g];
+			}
+			
+			NumT = m + NumT;   // Keep track
+			
+			double tmp1 = 1/((double)(m*dt));
+			double tmp2 = GetNorm(P); 
+			
+			al.push_back(tmp1*log(tmp2)); // Vector holding the growth of p for this run
+			
+			P = normalize(P);
+			for(int g = xsize; g < xsize+psize; g++){
+				XP[g] = P[g - xsize];
+			}
+		}
+	}
+	
+	//MatoutfileLy(XX ,"AddedValues.txt");
+	//int Stophere = 0;
+	//cout << "Stop here:";
+	//cin >> Stophere;
+	
+	// Calculate Lyapunov Exponent
+	double LyapExp = 0.0;
+	for(int i = 0; i < (int)(al.size()); i++){
+		LyapExp = (LyapExp + al[i]);
+	}
+	
+	LookForConvergence(m,  al);
+	
+	return (1/(double)(al.size() ))*LyapExp;
+	
+}
+
 
 
 //****************************************************************************************

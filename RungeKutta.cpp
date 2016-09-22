@@ -144,63 +144,6 @@ vector <vector <double> > RungeKutta::RK4(vector <double> (f_yt)(vector<double> 
 
 
 
-vector <double> RungeKutta::RK4_11(vector <double> (f_yt)(vector<double> vec, double param), vector<double> ENPvec, double K){
-	 
-	 // This is a function that will carry out the RK4 method of solving ODEs 
-	// Input: Function containing the f(y,t) of the ODE dy/dt = f(y,t) with some varying parameter
-	//        Some initial condition y0
-	
-	// Output: A matrix Y in which each column
-	//		   will contain all of your point calculated via the RK4
-	
-	int NDim = (int)ENPvec.size();
-	
-	// Create two temporary vectors 
-	vector <double> TmpVec1(NDim);
-	vector <double> TmpVec2(NDim);
-	
-	for(int i = 0; i < NDim; i++ ){
-			TmpVec2[i] = ENPvec[i];
-			//cout << "The " << i << " component is " << ENPvec[i] << endl;
-	}
-	
-	
-	
-	// Lets start the RK4
-		// Slope 1
-		k1 = f_yt(ENPvec, K);	
-		
-		// Slope 2
-		for(int j = 0; j < NDim; j++)
-			TmpVec1[j] = ENPvec[j] + 0.5*h*k1[j];
-		k2 = f_yt(TmpVec1, K);
-		
-		
-		// Slope 3
-		for(int j = 0; j < NDim; j++)
-			TmpVec1[j] = ENPvec[j] + 0.5*h*k2[j];
-		k3 = f_yt(TmpVec1, K);
-		
-		
-		// Slope 4
-		for(int j = 0; j < NDim; j++)
-			TmpVec1[j] = ENPvec[j] + h*k3[j];
-		k4 = f_yt(TmpVec1, K);
-		
-		for(int j = 0; j < NDim; j++){
-			TmpVec1[j] = ENPvec[j] + (1.0/(double)6.0)*h*(k1[j] + 2*k2[j] + 2*k3[j] + k4[j]);
-		}
-	
-	//cout<<"here - - - - - - - - - - - - - - - - - - - - - -"<<endl;
-	//OutVecRK(TmpVec1);
-	
-	return TmpVec1;
-	
-	
-
-
-}
-
 vector <double> RungeKutta::RK4_11(vector <double> (f_yt)(vector<double> vec), vector<double> ENPvec){
 	 
 	 // This is a function that will carry out the RK4 method of solving ODEs 
@@ -255,10 +198,12 @@ vector <double> RungeKutta::RK4_11(vector <double> (f_yt)(vector<double> vec), v
 	
 	
 }
-		
-vector<long double> RungeKutta::RK4_ld(vector <long double> (f_yt)(vector<long double> vec), vector<long double> ENPvec){
+
+
+
+vector <long double> RungeKutta::RK4_11_long(vector <long double> (f_yt)(vector<long double> vec), vector<long double> ENPvec){
 	 
-	// This is a function that will carry out the RK4 method of solving ODEs 
+	 // This is a function that will carry out the RK4 method of solving ODEs 
 	// Input: Function containing the f(y,t) of the ODE dy/dt = f(y,t) with some varying parameter
 	//        Some initial condition y0
 	
@@ -273,38 +218,41 @@ vector<long double> RungeKutta::RK4_ld(vector <long double> (f_yt)(vector<long d
 	
 	for(int i = 0; i < NDim; i++ ){
 			TmpVec2[i] = ENPvec[i];
+			//cout << "The " << i << " component is " << ENPvec[i] << endl;
 	}
 	
 	// Lets start the RK4
 		// Slope 1
-		k1_l = f_yt(ENPvec);	
+		k1l = f_yt(ENPvec);	
 		
 		// Slope 2
 		for(int j = 0; j < NDim; j++)
-			TmpVec1[j] = ENPvec[j] + 0.5*h*k1_l[j];
-		k2_l = f_yt(TmpVec1);
+			TmpVec1[j] = ENPvec[j] + 0.5*h*k1l[j];
+		k2l = f_yt(TmpVec1);	
 		
 		
 		// Slope 3
 		for(int j = 0; j < NDim; j++)
-			TmpVec1[j] = ENPvec[j] + 0.5*h*k2_l[j];
-		k3_l = f_yt(TmpVec1);
+			TmpVec1[j] = ENPvec[j] + 0.5*h*k2l[j];
+		k3l = f_yt(TmpVec1);	
 		
 		
 		// Slope 4
 		for(int j = 0; j < NDim; j++)
-			TmpVec1[j] = ENPvec[j] + h*k3_l[j];
-		k4_l = f_yt(TmpVec1);
+			TmpVec1[j] = ENPvec[j] + h*k3l[j];
+		k4l = f_yt(TmpVec1);	
 		
 		for(int j = 0; j < NDim; j++){
-			TmpVec1[j] = ENPvec[j] + (1.0/(long double)6.0)*h*(k1_l[j] + 2*k2_l[j] + 2*k3_l[j] + k4_l[j]);
+			TmpVec1[j] = ENPvec[j] + (1.0/(double)6.0)*h*(k1l[j] + 2*k2l[j] + 2*k3l[j] + k4l[j]);
 		}
 	
 	//cout<<"here - - - - - - - - - - - - - - - - - - - - - -"<<endl;
 	//OutVecRK(TmpVec1);
 	
 	return TmpVec1;
-}
+	
+	
+}		
 		
 //****************************************************************************************
 // Private
