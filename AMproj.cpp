@@ -332,7 +332,7 @@ vector<double> ClassCPlanerWithJacobian(vector<double> ENvec, int Current_Step, 
 	
 }
 
-vector<double> ClassBPlanerWithJacobian(vector<double> ENvec, int Current_Step, double Kick_Size, double Time_Between_Kicks){
+vector<double> ClassBPlanerWithJacobian(vector<double> ENvec){
 	
 	vector<double> f(6);
 	
@@ -395,6 +395,16 @@ vector<double> ClassBPlanerWithJacobian(vector<double> ENvec, int Current_Step, 
 	
 }
 
+
+vector<double> ClassBPlanerWithJacobian_Kicking_Instance(vector<double> ENvec, double Kick_Size){
+	
+	
+	
+	
+	
+	
+	
+}
 
 //****************************************************************************************
 
