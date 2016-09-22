@@ -201,7 +201,7 @@ vector <double> RungeKutta::RK4_11(vector <double> (f_yt)(vector<double> vec, do
 
 }
 
-vector <double> RungeKutta::RK4_11(vector <double> (f_yt)(vector<double> vec, int Current_Step, double Kick_Size, double Time_Between_Kicks), vector<double> ENPvec, int C_Step, double K_Size, double T_B_Kicks){
+vector <double> RungeKutta::RK4_11(vector <double> (f_yt)(vector<double> vec), vector<double> ENPvec){
 	 
 	 // This is a function that will carry out the RK4 method of solving ODEs 
 	// Input: Function containing the f(y,t) of the ODE dy/dt = f(y,t) with some varying parameter
@@ -225,24 +225,24 @@ vector <double> RungeKutta::RK4_11(vector <double> (f_yt)(vector<double> vec, in
 	
 	// Lets start the RK4
 		// Slope 1
-		k1 = f_yt(ENPvec, C_Step, K_Size, T_B_Kicks);	
+		k1 = f_yt(ENPvec);	
 		
 		// Slope 2
 		for(int j = 0; j < NDim; j++)
 			TmpVec1[j] = ENPvec[j] + 0.5*h*k1[j];
-		k2 = f_yt(TmpVec1, C_Step, K_Size, T_B_Kicks);	
+		k2 = f_yt(TmpVec1);	
 		
 		
 		// Slope 3
 		for(int j = 0; j < NDim; j++)
 			TmpVec1[j] = ENPvec[j] + 0.5*h*k2[j];
-		k3 = f_yt(TmpVec1, C_Step, K_Size, T_B_Kicks);	
+		k3 = f_yt(TmpVec1);	
 		
 		
 		// Slope 4
 		for(int j = 0; j < NDim; j++)
 			TmpVec1[j] = ENPvec[j] + h*k3[j];
-		k4 = f_yt(TmpVec1, C_Step, K_Size, T_B_Kicks);	
+		k4 = f_yt(TmpVec1);	
 		
 		for(int j = 0; j < NDim; j++){
 			TmpVec1[j] = ENPvec[j] + (1.0/(double)6.0)*h*(k1[j] + 2*k2[j] + 2*k3[j] + k4[j]);

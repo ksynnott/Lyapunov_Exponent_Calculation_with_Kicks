@@ -14,19 +14,12 @@ vector <double> normalize(vector<double> v);
 void SetParameters(string filename);
 void ExecuteScaling();
 
-// The various systems with Jacobian
-vector<double> ClassCPlaner(vector<double> ENvec, double k);
-vector<double> ClassCPlanerWithJacobian(vector<double> ENvec, double k);
-vector<double> ClassBPlaner(vector<double> ENvec, double k);
-vector<double> ClassBPlanerWithJacobian(vector<double> ENvec, double k);
-vector<long double> ClassBPlanerWithJacobian_ld(vector<long double> ENvec);
-vector<long double> ClassCPlanerWithJacobian_ld(vector<long double> ENvec);
-
 // Here are the updated systems with forcing included in the Jacobian
 // when doing the linearization. 
 vector<double> ClassCPlanerWithJacobian(vector<double> ENvec, int Current_Step, double Kick_Size, double Time_Between_Kicks);
-vector<double> ClassBPlanerWithJacobian(vector<double> ENvec, int Current_Step, double Kick_Size, double Time_Between_Kicks);
 
+vector<double> ClassBPlanerWithJacobian(vector<double> ENvec);
+vector<double> ClassBPlanerWithJacobian_Kicking_Instance(vector<double> ENvec, double Kick_Size);
 
 
 // Need a get phi function as this can be tricky as atan function wont deal with the full circle
@@ -72,7 +65,7 @@ int main(){
 		clock_t st = clock();
 		for(int i = 0; i < NumK; i++){
 			Lyapunov LyapLase(NormStep, dt, TransientTime, TimeEvlo, y0, p0);
-			h.push_back(LyapLase.CalcBigLypunov_Kick_new(ClassBPlanerWithJacobian, InKick + i*dKick, Perturb ));
+			h.push_back(LyapLase.CalcBigLypunov_Kick_new(ClassBPlanerWithJacobian, ClassBPlanerWithJacobian_Kicking_Instance, InKick + i*dKick, Perturb ));
 			k.push_back(InKick + i*dKick);
 			
 			loadbarMain(i, NumK, 50, st);
@@ -99,176 +92,6 @@ int main(){
 }
 
 
-//****************************************************************************************
-
-vector<double> ClassCPlaner(vector<double> ENvec, double k){
-	
-	vector<double> f(5);
-	k = k+1;
-	
-	f[0] = - ENvec[0] - Dp*ENvec[1] - ENvec[3];
-	f[1] = - ENvec[1] + Dp*ENvec[0] + ENvec[2];
-	f[2] = Gpc*( -1*ENvec[2] + Dp*ENvec[3] + ENvec[1]*ENvec[4] );
-	f[3] = Gpc*( -1*ENvec[3] - Dp*ENvec[2] - ENvec[0]*ENvec[4] );
-	f[4] = Gnc*( Lambda - ENvec[4] + ENvec[3]*ENvec[0] - ENvec[2]*ENvec[1] );
-	
-	return f;
-	
-}
-
-vector<double> ClassCPlanerWithJacobian(vector<double> ENvec, double k){
-	
-	vector<double> f(10);
-	k = k+1;
-	
-	f[0] = - ENvec[0] - Dp*ENvec[1] - ENvec[3];
-	f[1] = - ENvec[1] + Dp*ENvec[0] + ENvec[2];
-	f[2] = Gpc*( -1*ENvec[2] + Dp*ENvec[3] + ENvec[1]*ENvec[4] );
-	f[3] = Gpc*( -1*ENvec[3] - Dp*ENvec[2] - ENvec[0]*ENvec[4] );
-	f[4] = Gnc*( Lambda - ENvec[4] + ENvec[3]*ENvec[0] - ENvec[2]*ENvec[1] );
-	
-	// Jacobian
-	
-	f[5] = - ENvec[5] - Dp*ENvec[6] - ENvec[8];
-	f[6] = Dp*ENvec[5] - ENvec[6] + ENvec[7];
-	
-	f[7] = Gpc*(   ENvec[4]*ENvec[6] - ENvec[7] + Dp*ENvec[8] + ENvec[1]*ENvec[9] );
-	f[8] = Gpc*( - ENvec[4]*ENvec[5] - Dp*ENvec[7] - ENvec[8] - ENvec[0]*ENvec[9] );
-	
-	f[9] = Gnc*(   ENvec[3]*ENvec[5] - ENvec[2]*ENvec[6] - ENvec[1]*ENvec[7] +
-				   ENvec[0]*ENvec[8] - ENvec[9] );
-	
-	f[0] = EquScal*f[0];
-	f[1] = EquScal*f[1];
-	f[2] = EquScal*f[2];
-	f[3] = EquScal*f[3];
-	f[4] = EquScal*f[4];
-	
-	f[5] = EquScal*f[5];
-	f[6] = EquScal*f[6];
-	f[7] = EquScal*f[7];
-	f[8] = EquScal*f[8];
-	f[9] = EquScal*f[9];
-	
-	
-	return f;
-	
-}
-
-vector<double> ClassBPlaner(vector<double> ENvec, double k){
-	
-	vector<double> f(3);
-	
-	f[0] = ( (ENvec[2]/(1 + Dp*Dp)) - 1)*(ENvec[0] + Dp*ENvec[1]) + k;
-	f[1] = ( (ENvec[2]/(1 + Dp*Dp)) - 1)*(ENvec[1] - Dp*ENvec[0]);
-	f[2] = Gnc*( Lambda - ENvec[2] - ((ENvec[0]*ENvec[0] + ENvec[1]*ENvec[1])*ENvec[2])/(1 + Dp*Dp));
-	
-	return f;
-	
-}
-
-vector<double> ClassBPlanerWithJacobian(vector<double> ENvec, double k){
-	
-	vector<double> f(6);
-	
-	f[0] = ( (ENvec[2]/(1 + Dp*Dp)) - 1.0)*(ENvec[0] + Dp*ENvec[1]);
-	f[1] = ( (ENvec[2]/(1 + Dp*Dp)) - 1.0)*(ENvec[1] - Dp*ENvec[0]);
-	f[2] = Gnc*( Lambda - ENvec[2] - ((ENvec[0]*ENvec[0] + ENvec[1]*ENvec[1])*ENvec[2])/(1.0 + Dp*Dp));
-	
-	k = k+1;
-	
-	// Just for ease lets define some simple constants
-	double alf = (ENvec[2]/(1.0 + Dp*Dp)) - 1.0;
-	double Lor = (1.0/(1.0 + Dp*Dp));
-	double EEE = ENvec[0]*ENvec[0] + ENvec[1]*ENvec[1];
-	
-	f[3] = alf*ENvec[3] + Dp*alf*ENvec[4] + (ENvec[0] + Dp*ENvec[1])*Lor*ENvec[5];
-	f[4] = -Dp*alf*ENvec[3] + alf*ENvec[4] + (ENvec[1] - Dp*ENvec[0])*Lor*ENvec[5];
-	f[5] = -Gnc*( 2.0*ENvec[0]*ENvec[2]*Lor*ENvec[3] + 2.0*ENvec[1]*ENvec[2]*Lor*ENvec[4] + ENvec[5] + EEE*Lor*ENvec[5] );
-	
-	
-	
-	f[0] = EquScal*f[0];
-	f[1] = EquScal*f[1];
-	f[2] = EquScal*f[2];
-	
-	f[3] = EquScal*f[3];
-	f[4] = EquScal*f[4];
-	f[5] = EquScal*f[5];
-	
-	return f;
-	
-}
-
-
-vector<long double> ClassCPlanerWithJacobian_ld(vector<long double> ENvec){
-	
-	vector<long double> f(10);
-	
-	f[0] = - ENvec[0] - Dp*ENvec[1] - ENvec[3];
-	f[1] = - ENvec[1] + Dp*ENvec[0] + ENvec[2];
-	f[2] = Gpc*( -1*ENvec[2] + Dp*ENvec[3] + ENvec[1]*ENvec[4] );
-	f[3] = Gpc*( -1*ENvec[3] - Dp*ENvec[2] - ENvec[0]*ENvec[4] );
-	f[4] = Gnc*( Lambda - ENvec[4] + ENvec[3]*ENvec[0] - ENvec[2]*ENvec[1] );
-	
-	// Jacobian
-	
-	f[5] = - ENvec[5] - Dp*ENvec[6] - ENvec[8];
-	f[6] = Dp*ENvec[5] - ENvec[6] + ENvec[7];
-	
-	f[7] = Gpc*(   ENvec[4]*ENvec[6] - ENvec[7] + Dp*ENvec[8] + ENvec[1]*ENvec[9] );
-	f[8] = Gpc*( - ENvec[4]*ENvec[5] - Dp*ENvec[7] - ENvec[8] - ENvec[0]*ENvec[9] );
-	
-	f[9] = Gnc*(   ENvec[3]*ENvec[5] - ENvec[2]*ENvec[6] - ENvec[1]*ENvec[7] +
-				   ENvec[0]*ENvec[8] - ENvec[9] );
-	
-	f[0] = EquScal*f[0];
-	f[1] = EquScal*f[1];
-	f[2] = EquScal*f[2];
-	f[3] = EquScal*f[3];
-	f[4] = EquScal*f[4];
-	
-	f[5] = EquScal*f[5];
-	f[6] = EquScal*f[6];
-	f[7] = EquScal*f[7];
-	f[8] = EquScal*f[8];
-	f[9] = EquScal*f[9];
-	
-	
-	return f;
-	
-}
-
-vector<long double> ClassBPlanerWithJacobian_ld(vector<long double> ENvec){
-	
-	vector<long double> f(6);
-	
-	f[0] = ( (ENvec[2]/(1.0 + Dp*Dp)) - 1.0)*(ENvec[0] + Dp*ENvec[1]);
-	f[1] = ( (ENvec[2]/(1.0 + Dp*Dp)) - 1.0)*(ENvec[1] - Dp*ENvec[0]);
-	f[2] = Gnc*( Lambda - ENvec[2] - ((ENvec[0]*ENvec[0] + ENvec[1]*ENvec[1])*ENvec[2])/(1.0 + Dp*Dp));
-	
-	
-	// Just for ease lets define some simple constants
-	double alf = (ENvec[2]/(1 + Dp*Dp)) - 1.0;
-	double Lor = (1.0/(1.0 + Dp*Dp));
-	double EEE = ENvec[0]*ENvec[0] + ENvec[1]*ENvec[1];
-	
-	f[3] = alf*ENvec[3] + Dp*alf*ENvec[4] + (ENvec[0] + Dp*ENvec[1])*Lor*ENvec[5];
-	f[4] = -Dp*alf*ENvec[3] + alf*ENvec[4] + (ENvec[1] - Dp*ENvec[0])*Lor*ENvec[5];
-	f[5] = -Gnc*( 2.0*ENvec[0]*ENvec[2]*Lor*ENvec[3] + 2.0*ENvec[1]*ENvec[2]*Lor*ENvec[4] + ENvec[5] + EEE*Lor*ENvec[5] );
-	
-	
-	f[0] = EquScal*f[0];
-	f[1] = EquScal*f[1];
-	f[2] = EquScal*f[2];
-	
-	f[3] = EquScal*f[3];
-	f[4] = EquScal*f[4];
-	f[5] = EquScal*f[5];
-	
-	return f;
-	
-}
 
 //****************************************************************************************
 
@@ -332,54 +155,24 @@ vector<double> ClassCPlanerWithJacobian(vector<double> ENvec, int Current_Step, 
 	
 }
 
+//****************************************************************************************
+
 vector<double> ClassBPlanerWithJacobian(vector<double> ENvec){
 	
 	vector<double> f(6);
 	
-	
-	//Figure out the Time_Between_Kicks in terms of time steps
-	int TimeStep = (Time_Between_Kicks)/dt;
-	
-	int delta = 0;
-	if( Current_Step%TimeStep == 0 )
-		delta = 1;
-	
-	// From Documentation "Linearization/Linearization.pdf" I am including the functions f_x(T) and f_y(T)
-	double phi = GetPhi(ENvec);
-	double f_x = Kick_Size*cos(phi)*sin(phi*NumPet)*delta;
-	double f_y = Kick_Size*sin(phi)*sin(phi*NumPet)*delta;
-	
-	/*if(Current_Step < 5 ){
-		cout << "---------------------------------------" << endl;
-		cout << "Current Step = " << Current_Step << endl;
-		cout << "TimeStep     = " << TimeStep << endl;
-		cout << "Modulo       = " << Current_Step%TimeStep << endl;
-		cout << "f_x          = " << f_x << endl;
-		cout << "f_y          = " << f_y << endl;
-		cout << "---------------------------------------" << endl;
-	}*/
-	
 	// Here, the dx/dt = f(x)	
-	f[0] = ( (ENvec[2]/(1.0 + Dp*Dp)) - 1.0)*(ENvec[0] + Dp*ENvec[1]) + f_x;
-	f[1] = ( (ENvec[2]/(1.0 + Dp*Dp)) - 1.0)*(ENvec[1] - Dp*ENvec[0]) + f_y;
+	f[0] = ( (ENvec[2]/(1.0 + Dp*Dp)) - 1.0)*(ENvec[0] + Dp*ENvec[1]);
+	f[1] = ( (ENvec[2]/(1.0 + Dp*Dp)) - 1.0)*(ENvec[1] - Dp*ENvec[0]);
 	f[2] = Gnc*( Lambda - ENvec[2] - ((ENvec[0]*ENvec[0] + ENvec[1]*ENvec[1])*ENvec[2])/(1.0 + Dp*Dp));	
-	
-	// Again from Documentation "Linearization/Linearization.pdf" I am including the necessary differentials of f_x(T) and f_y(T)
-	double Dphi_Ex = (-ENvec[1])/( ENvec[0]*ENvec[0] + ENvec[1]*ENvec[1] );
-	double Dphi_Ey = ( ENvec[0])/( ENvec[0]*ENvec[0] + ENvec[1]*ENvec[1] );
-	
-	double Df_xx = Dphi_Ex*Kick_Size*( NumPet*cos(phi)*cos(phi*NumPet) - sin(phi)*sin(phi*NumPet) )*delta;
-	double Df_xy = Dphi_Ey*Kick_Size*( NumPet*cos(phi)*cos(phi*NumPet) - sin(phi)*sin(phi*NumPet) )*delta; // d/d(Ey) fx(T)
-	double Df_yx = Dphi_Ex*Kick_Size*( NumPet*sin(phi)*cos(phi*NumPet) + cos(phi)*sin(phi*NumPet) )*delta; // d/d(Ex) fy(T)
-	double Df_yy = Dphi_Ey*Kick_Size*( NumPet*sin(phi)*cos(phi*NumPet) + cos(phi)*sin(phi*NumPet) )*delta;
 	
 	// Jacobian
 	double alf = (ENvec[2]/(1 + Dp*Dp)) - 1.0;
 	double Lor = (1.0/(1.0 + Dp*Dp));
 	double EEE = ENvec[0]*ENvec[0] + ENvec[1]*ENvec[1];
 	 
-	f[3] = (alf + Df_xx)*ENvec[3] + (Dp*alf + Df_xy)*ENvec[4] + (ENvec[0] + Dp*ENvec[1])*Lor*ENvec[5];
-	f[4] = (-Dp*alf + Df_yx)*ENvec[3] + (alf + Df_yy)*ENvec[4] + (ENvec[1] - Dp*ENvec[0])*Lor*ENvec[5];
+	f[3] = (alf)*ENvec[3] + (Dp*alf)*ENvec[4] + (ENvec[0] + Dp*ENvec[1])*Lor*ENvec[5];
+	f[4] = (-Dp*alf)*ENvec[3] + (alf)*ENvec[4] + (ENvec[1] - Dp*ENvec[0])*Lor*ENvec[5];
 	f[5] = -Gnc*( 2.0*ENvec[0]*ENvec[2]*Lor*ENvec[3] + 2.0*ENvec[1]*ENvec[2]*Lor*ENvec[4] + ENvec[5] + EEE*Lor*ENvec[5] );
 	
 	f[0] = EquScal*f[0];
@@ -398,12 +191,33 @@ vector<double> ClassBPlanerWithJacobian(vector<double> ENvec){
 
 vector<double> ClassBPlanerWithJacobian_Kicking_Instance(vector<double> ENvec, double Kick_Size){
 	
+	// From Documentation "Linearization/Linearization.pdf" I am including the functions f_x(T) and f_y(T)
+	double phi = GetPhi(ENvec);
+	double f_x = Kick_Size*cos(phi)*sin(phi*NumPet);
+	double f_y = Kick_Size*sin(phi)*sin(phi*NumPet);
+	
+	// Again from Documentation "Linearization/Linearization.pdf" I am including the necessary differentials of f_x(T) and f_y(T)
+	double Dphi_Ex = (-ENvec[1])/( ENvec[0]*ENvec[0] + ENvec[1]*ENvec[1] );
+	double Dphi_Ey = ( ENvec[0])/( ENvec[0]*ENvec[0] + ENvec[1]*ENvec[1] );
+	
+	double Df_xx = Dphi_Ex*Kick_Size*( NumPet*cos(phi)*cos(phi*NumPet) - sin(phi)*sin(phi*NumPet) );
+	double Df_xy = Dphi_Ey*Kick_Size*( NumPet*cos(phi)*cos(phi*NumPet) - sin(phi)*sin(phi*NumPet) ); // d/d(Ey) fx(T)
+	double Df_yx = Dphi_Ex*Kick_Size*( NumPet*sin(phi)*cos(phi*NumPet) + cos(phi)*sin(phi*NumPet) ); // d/d(Ex) fy(T)
+	double Df_yy = Dphi_Ey*Kick_Size*( NumPet*sin(phi)*cos(phi*NumPet) + cos(phi)*sin(phi*NumPet) );
 	
 	
+	vector<double> f(6);
 	
+	f[0] = ENvec[0] + f_x;
+	f[1] = ENvec[1] + f_y;
+	f[2] = ENvec[2];
 	
+	f[3] = ENvec[3] + ENvec[3]*Df_xx + ENvec[4]*Df_xy;
+	f[4] = ENvec[4] + ENvec[3]*Df_yx + ENvec[4]*Df_yy;	
+	f[5] = ENvec[5];
 	
-	
+	return f;
+
 }
 
 //****************************************************************************************

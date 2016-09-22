@@ -347,7 +347,7 @@ double Lyapunov::CalcBigLypunov_Kick(vector<long double> (*f_yt)(vector <long do
 }
 
 
-double Lyapunov::CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> vec, int Current_Step, double Kick_Size, double Time_Between_Kicks), double Kicktime, double kicksize){
+double Lyapunov::CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> vec), vector<double> (*k_yt)(vector<double> vec, double KickSize), double Kicktime, double kicksize){
 	
 	int xsize = (int)x.size();
 	int psize = (int)p.size();
@@ -368,26 +368,13 @@ double Lyapunov::CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> v
 	// Iterate long enough to insure x is in attractor
 	int steps = Tran/dt;
 	RungeKutta RunKut(steps, dt);
-	int count = 0;
-	
-	vector< vector<double> > XX_1(3, vector<double> (1) );
-	
-	XX_1[0][0] = XP[0];
-	XX_1[1][0] = XP[1];
-	XX_1[2][0] = XP[2];
 	
 	for(int i = 0; i < steps; i++){
-		// Choose Kicktime+1 as current step to insure the delta in function is always zero. See function in AMproj.cpp
-		XP = RunKut.RK4_11(f_yt, XP, (Kicktime+1), kicksize, Kicktime);
-		
-		for(int u = 0; u < 3; u++){
-			XX_1[u].push_back(XP[u]);
-		}
+		XP = RunKut.RK4_11(f_yt, XP);
 	}
 	
-	MatoutfileLy(XX_1 ,"AddedValues_1.txt");
 	
-	
+	// Just as a method of checking
 	cout << "E_x = " << XP[0] << endl;
 	cout << "E_y = " << XP[1] << endl;
 	cout << "N   = " << XP[2] << endl;
@@ -408,34 +395,27 @@ double Lyapunov::CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> v
 	// Now that we are on the attractor we can run, looking for the growth of p
 	steps = (TimeEvlo)/dt; // How many steps in total
 	
-	vector< vector<double> > XX(3, vector<double> (1) );
+	//vector< vector<double> > XX(3, vector<double> (1) );
 	
-	XX[0][0] = XP[0];
-	XX[1][0] = XP[1];
-	XX[2][0] = XP[2];
+	//XX[0][0] = XP[0];
+	//XX[1][0] = XP[1];
+	//XX[2][0] = XP[2];
 	
-	count = 0;
 	int NumT = 0;
 	vector<double> al; 
 	
 	int kickstep = (int)(Kicktime/dt);
 	
-	cout << "dt = " << dt << endl;
-	
 	// Run . . . 
 	for(int i = 0; i <= steps; i++){
 		
-		cout << XP[0] << endl;
-		cout << XP[1] << endl;
-		cout << XP[2] << endl;
+		XP = RunKut.RK4_11(f_yt, XP);
 		
-		XP = RunKut.RK4_11(f_yt, XP, i, kicksize, Kicktime);
+		if( i%kickstep == 0 ){
+			XP = k_yt(XP, kicksize);
+		}
 		
-		cout << XP[0] << endl;
-		cout << XP[1] << endl;
-		cout << XP[2] << endl;
-		
-		if(i < 1){
+		/*if(i < 15*kickstep){
 			for(int u = 0; u < 3; u++){
 				XX[u].push_back(XP[u]);
 			}
@@ -443,7 +423,7 @@ double Lyapunov::CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> v
 		else{
 			
 			break;
-		}
+		}*/
 		
 		
 		// For the step we choose, get norm of p then normalise
@@ -454,7 +434,6 @@ double Lyapunov::CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> v
 			}
 			
 			NumT = m + NumT;   // Keep track
-			count = count + 1; // Keep track
 			
 			double tmp1 = 1/((double)(m*dt));
 			double tmp2 = GetNorm(P); 
@@ -468,10 +447,10 @@ double Lyapunov::CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> v
 		}
 	}
 	
-	MatoutfileLy(XX ,"AddedValues.txt");
-	int Stophere = 0;
-	cout << "Stop here:";
-	cin >> Stophere;
+	//MatoutfileLy(XX ,"AddedValues.txt");
+	//int Stophere = 0;
+	//cout << "Stop here:";
+	//cin >> Stophere;
 	
 	// Calculate Lyapunov Exponent
 	double LyapExp = 0.0;

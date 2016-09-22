@@ -17,7 +17,7 @@ public:
 
 	double CalcBigLypunov_Kick(vector<long double> (*f_yt)(vector <long double> vec), double K, double kicksize);
 	
-	double CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> vec, int Current_Step, double Kick_Size, double Time_Between_Kicks), double Kicktime, double kicksize);
+	double CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> vec), vector<double> (*k_yt)(vector<double> vec, double KickSize), double Kicktime, double kicksize);
 
 private:
 	vector<double> x;
