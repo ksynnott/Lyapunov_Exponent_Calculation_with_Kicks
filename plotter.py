@@ -18,9 +18,10 @@ print data.size
 print data[0].size
 
 Nd = data[0].size
+Nd_2 = 1000
 
-x  = np.linspace(0, 2*np.pi, Nd)
-zz = np.linspace(Nn, Nn, Nd)
+x  = np.linspace(0, 2*np.pi, Nd_2)
+zz = np.linspace(Nn, Nn, Nd_2)
 xx = Am*np.sin(x)
 yy = Am*np.cos(x)
 

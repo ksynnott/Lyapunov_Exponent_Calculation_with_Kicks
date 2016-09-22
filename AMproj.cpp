@@ -341,13 +341,23 @@ vector<double> ClassBPlanerWithJacobian(vector<double> ENvec, int Current_Step, 
 	int TimeStep = (Time_Between_Kicks)/dt;
 	
 	int delta = 0;
-	if( TimeStep > 0 && Current_Step%TimeStep == 0 )
+	if( Current_Step%TimeStep == 0 )
 		delta = 1;
 	
 	// From Documentation "Linearization/Linearization.pdf" I am including the functions f_x(T) and f_y(T)
 	double phi = GetPhi(ENvec);
 	double f_x = Kick_Size*cos(phi)*sin(phi*NumPet)*delta;
 	double f_y = Kick_Size*sin(phi)*sin(phi*NumPet)*delta;
+	
+	/*if(Current_Step < 5 ){
+		cout << "---------------------------------------" << endl;
+		cout << "Current Step = " << Current_Step << endl;
+		cout << "TimeStep     = " << TimeStep << endl;
+		cout << "Modulo       = " << Current_Step%TimeStep << endl;
+		cout << "f_x          = " << f_x << endl;
+		cout << "f_y          = " << f_y << endl;
+		cout << "---------------------------------------" << endl;
+	}*/
 	
 	// Here, the dx/dt = f(x)	
 	f[0] = ( (ENvec[2]/(1.0 + Dp*Dp)) - 1.0)*(ENvec[0] + Dp*ENvec[1]) + f_x;
@@ -384,6 +394,7 @@ vector<double> ClassBPlanerWithJacobian(vector<double> ENvec, int Current_Step, 
 	return f;
 	
 }
+
 
 //****************************************************************************************
 

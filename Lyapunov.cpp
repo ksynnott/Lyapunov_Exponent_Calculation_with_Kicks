@@ -370,10 +370,23 @@ double Lyapunov::CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> v
 	RungeKutta RunKut(steps, dt);
 	int count = 0;
 	
+	vector< vector<double> > XX_1(3, vector<double> (1) );
+	
+	XX_1[0][0] = XP[0];
+	XX_1[1][0] = XP[1];
+	XX_1[2][0] = XP[2];
+	
 	for(int i = 0; i < steps; i++){
 		// Choose Kicktime+1 as current step to insure the delta in function is always zero. See function in AMproj.cpp
 		XP = RunKut.RK4_11(f_yt, XP, (Kicktime+1), kicksize, Kicktime);
+		
+		for(int u = 0; u < 3; u++){
+			XX_1[u].push_back(XP[u]);
+		}
 	}
+	
+	MatoutfileLy(XX_1 ,"AddedValues_1.txt");
+	
 	
 	cout << "E_x = " << XP[0] << endl;
 	cout << "E_y = " << XP[1] << endl;
@@ -406,19 +419,33 @@ double Lyapunov::CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> v
 	vector<double> al; 
 	
 	int kickstep = (int)(Kicktime/dt);
-	cout << "Kick Step = " << kickstep << endl;
-	cout << "Steps = " << steps  << endl;
+	
+	cout << "dt = " << dt << endl;
 	
 	// Run . . . 
 	for(int i = 0; i <= steps; i++){
 		
+		cout << XP[0] << endl;
+		cout << XP[1] << endl;
+		cout << XP[2] << endl;
+		
 		XP = RunKut.RK4_11(f_yt, XP, i, kicksize, Kicktime);
 		
-		if(count < 39){
+		cout << XP[0] << endl;
+		cout << XP[1] << endl;
+		cout << XP[2] << endl;
+		
+		if(i < 1){
 			for(int u = 0; u < 3; u++){
 				XX[u].push_back(XP[u]);
 			}
 		}
+		else{
+			
+			break;
+		}
+		
+		
 		// For the step we choose, get norm of p then normalise
 		if((i%m == 0 && i > 1)){
 			
