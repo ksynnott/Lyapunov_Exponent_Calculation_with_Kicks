@@ -188,13 +188,8 @@ double Lyapunov::CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> v
 	int xsize = (int)x.size();
 	int psize = (int)p.size();
 	
-	cout << xsize << endl;
-	cout << psize << endl;
-	
 	vector<double> XP( xsize + psize );
 	vector<double> P(psize);
-	
-	cout << xsize << endl;
 		
 	// Initialise vector XP
 	for(int i = 0; i < (int)XP.size(); i++){
@@ -203,7 +198,6 @@ double Lyapunov::CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> v
 		else
 			XP[i] = (double)p[i - xsize];
 	}
-	cout << "Here" << endl;
 	
 	// Iterate long enough to insure x is in attractor
 	int steps = Tran/dt;
@@ -217,7 +211,7 @@ double Lyapunov::CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> v
 	// Just as a method of checking
 	cout << "E_x = " << XP[0] << endl;
 	cout << "E_y = " << XP[1] << endl;
-	cout << "N   = " << XP[2] << endl;
+	cout << "N   = " << XP[4] << endl;
 	cout << "|E| = " << sqrt(XP[0]*XP[0] + XP[1]*XP[1]) << endl;
 	cout << "A = " << sqrt(Lambda - 1 - Dp*Dp) << endl;
 	

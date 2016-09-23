@@ -16,8 +16,8 @@ void ExecuteScaling();
 
 // Here are the updated systems with forcing included in the Jacobian
 // when doing the linearization. 
-vector<double> ClassCPlanerWithJacobian(vector<double> ENvec, int Current_Step, double Kick_Size, double Time_Between_Kicks);
-
+vector<double> ClassCPlanerWithJacobian(vector<double> ENvec);
+vector<double> ClassCPlanerWithJacobian_Kicking_Instance(vector<double> ENvec, double Kick_Size);
 
 vector<double> ClassBPlanerWithJacobian(vector<double> ENvec);
 vector<double> ClassBPlanerWithJacobian_Kicking_Instance(vector<double> ENvec, double Kick_Size);
@@ -48,18 +48,18 @@ int main(){
 		
 		cout << "Total Number of steps:  " << NumOfNorm*NormStep << endl;
 
-		int vecsize = 3;			
-		/*vector <double> p0(vecsize);			vector <double> y0(vecsize);
+		int vecsize = 5;			
+		vector <double> p0(vecsize);			vector <double> y0(vecsize);
 		p0[0] = -0.00001;						y0[0] = -2.1;
 		p0[1] = -0.00001;						y0[1] = 1.5;
-		p0[2] = -0.00001;						y0[2] = 6.1;*/
-//		p0[3] = 0.001;						y0[3] = 2.0;
-//		p0[4] = 0.001;						y0[4] = 5.1;
+		p0[2] = -0.00001;						y0[2] = 6.1;
+		p0[3] = 0.001;							y0[3] = 2.0;
+		p0[4] = 0.001;							y0[4] = 5.1;
 		 
-		vector <long double> p0(vecsize);			vector <long double> y0(vecsize);
+		/*vector <long double> p0(vecsize);			vector <long double> y0(vecsize);
 		p0[0] = -0.00001;							y0[0] = -2.1;
 		p0[1] = -0.00001;							y0[1] = 1.5;
-		p0[2] = -0.00001;							y0[2] = 6.1;
+		p0[2] = -0.00001;							y0[2] = 6.1;*/
 		 
 		vector<double> h;
 		vector<double> k;
@@ -67,7 +67,7 @@ int main(){
 		clock_t st = clock();
 		for(int i = 0; i < NumK; i++){
 			Lyapunov LyapLase(NormStep, dt, TransientTime, TimeEvlo, y0, p0);
-			h.push_back(LyapLase.CalcBigLypunov_Kick_new_l(ClassBPlanerWithJacobian, ClassBPlanerWithJacobian_Kicking_Instance, InKick + i*dKick, Perturb ));
+			h.push_back(LyapLase.CalcBigLypunov_Kick_new(ClassCPlanerWithJacobian, ClassCPlanerWithJacobian_Kicking_Instance, InKick + i*dKick, Perturb ));
 			k.push_back(InKick + i*dKick);
 			break;
 			loadbarMain(i, NumK, 50, st);
@@ -97,42 +97,20 @@ int main(){
 
 //****************************************************************************************
 
-vector<double> ClassCPlanerWithJacobian(vector<double> ENvec, int Current_Step, double Kick_Size, double Time_Between_Kicks){
+vector<double> ClassCPlanerWithJacobian(vector<double> ENvec){
 	
 	vector<double> f(10);
 	
-	//Figure out the Time_Between_Kicks in terms of time steps
-	int TimeStep = (Time_Between_Kicks)/dt;
-	
-	int delta = 0;
-	if( TimeStep > 0 && Current_Step%TimeStep == 0 )
-		delta = 1;
-	
-	// From Documentation "Linearization/Linearization.pdf" I am including the functions f_x(T) and f_y(T)
-	double phi = GetPhi(ENvec);
-	double f_x = Kick_Size*cos(phi)*sin(phi*NumPet)*delta;
-	double f_y = Kick_Size*sin(phi)*sin(phi*NumPet)*delta;
-	
 	// Here, the dx/dt = f(x)	
-	f[0] = - ENvec[0] - Dp*ENvec[1] - ENvec[3] + f_x;
-	f[1] = - ENvec[1] + Dp*ENvec[0] + ENvec[2] + f_y;
+	f[0] = - ENvec[0] - Dp*ENvec[1] - ENvec[3];
+	f[1] = - ENvec[1] + Dp*ENvec[0] + ENvec[2];
 	f[2] = Gpc*( -1*ENvec[2] + Dp*ENvec[3] + ENvec[1]*ENvec[4] );
 	f[3] = Gpc*( -1*ENvec[3] - Dp*ENvec[2] - ENvec[0]*ENvec[4] );
 	f[4] = Gnc*( Lambda - ENvec[4] + ENvec[3]*ENvec[0] - ENvec[2]*ENvec[1] );
 	
-	
-	// Again from Documentation "Linearization/Linearization.pdf" I am including the necessary differentials of f_x(T) and f_y(T)
-	double Dphi_Ex = (-ENvec[1])/( ENvec[0]*ENvec[0] + ENvec[1]*ENvec[1] );
-	double Dphi_Ey = ( ENvec[0])/( ENvec[0]*ENvec[0] + ENvec[1]*ENvec[1] );
-	
-	double Df_xx = Dphi_Ex*Kick_Size*( NumPet*cos(phi)*cos(phi*NumPet) - sin(phi)*sin(phi*NumPet) );
-	double Df_xy = Dphi_Ey*Kick_Size*( NumPet*cos(phi)*cos(phi*NumPet) - sin(phi)*sin(phi*NumPet) );
-	double Df_yx = Dphi_Ex*Kick_Size*( NumPet*sin(phi)*cos(phi*NumPet) + cos(phi)*sin(phi*NumPet) );
-	double Df_yy = Dphi_Ey*Kick_Size*( NumPet*sin(phi)*cos(phi*NumPet) + cos(phi)*sin(phi*NumPet) );
-	
 	// Jacobian 
-	f[5] = (-1.0 + Df_xx)*ENvec[5] + (-1.0*Dp + Df_xy)*ENvec[6] - ENvec[8];
-	f[6] = (Dp + Df_yx)*ENvec[5] +  (-1.0 + Df_yy)*ENvec[6] + ENvec[7];
+	f[5] = (-1.0)*ENvec[5] + (-1.0*Dp)*ENvec[6] - ENvec[8];
+	f[6] = (Dp)*ENvec[5] +  (-1.0)*ENvec[6] + ENvec[7];
 	
 	f[7] = Gpc*(   ENvec[4]*ENvec[6] - ENvec[7] + Dp*ENvec[8] + ENvec[1]*ENvec[9] );
 	f[8] = Gpc*( - ENvec[4]*ENvec[5] - Dp*ENvec[7] - ENvec[8] - ENvec[0]*ENvec[9] );
@@ -156,6 +134,57 @@ vector<double> ClassCPlanerWithJacobian(vector<double> ENvec, int Current_Step, 
 	return f;
 	
 }
+
+vector<double> ClassCPlanerWithJacobian_Kicking_Instance(vector<double> ENvec, double Kick_Size){
+	
+	vector<double> f(10);
+	
+	// From Documentation "Linearization/Linearization.pdf" I am including the functions f_x(T) and f_y(T)
+	double phi = GetPhi(ENvec);
+	double f_x = Kick_Size*cos(phi)*sin(phi*NumPet);
+	double f_y = Kick_Size*sin(phi)*sin(phi*NumPet);
+	
+	// Here, the dx/dt = f(x)	
+	f[0] = ENvec[0] + f_x;
+	f[1] = ENvec[1] + f_y;
+	f[2] = ENvec[2];
+	f[3] = ENvec[3];
+	f[4] = ENvec[4];
+	
+	
+	// Again from Documentation "Linearization/Linearization.pdf" I am including the necessary differentials of f_x(T) and f_y(T)
+	double Dphi_Ex = (-ENvec[1])/( ENvec[0]*ENvec[0] + ENvec[1]*ENvec[1] );
+	double Dphi_Ey = ( ENvec[0])/( ENvec[0]*ENvec[0] + ENvec[1]*ENvec[1] );
+	
+	double Df_xx = Dphi_Ex*Kick_Size*( NumPet*cos(phi)*cos(phi*NumPet) - sin(phi)*sin(phi*NumPet) );
+	double Df_xy = Dphi_Ey*Kick_Size*( NumPet*cos(phi)*cos(phi*NumPet) - sin(phi)*sin(phi*NumPet) );
+	double Df_yx = Dphi_Ex*Kick_Size*( NumPet*sin(phi)*cos(phi*NumPet) + cos(phi)*sin(phi*NumPet) );
+	double Df_yy = Dphi_Ey*Kick_Size*( NumPet*sin(phi)*cos(phi*NumPet) + cos(phi)*sin(phi*NumPet) );
+	
+	// Jacobian 
+	f[5] = ENvec[5] + Df_xx*ENvec[5] + Df_xy*ENvec[6];
+	f[6] = ENvec[6] + Df_yx*ENvec[5] + Df_yy*ENvec[6];
+	f[7] = ENvec[7];
+	f[8] = ENvec[8];
+	f[9] = ENvec[9];
+	
+	f[0] = EquScal*f[0];
+	f[1] = EquScal*f[1];
+	f[2] = EquScal*f[2];
+	f[3] = EquScal*f[3];
+	f[4] = EquScal*f[4];
+	
+	f[5] = EquScal*f[5];
+	f[6] = EquScal*f[6];
+	f[7] = EquScal*f[7];
+	f[8] = EquScal*f[8];
+	f[9] = EquScal*f[9];
+	
+	
+	return f;
+	
+}
+
 
 //****************************************************************************************
 
