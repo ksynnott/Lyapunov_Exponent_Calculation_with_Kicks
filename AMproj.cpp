@@ -185,7 +185,6 @@ vector<double> ClassCPlanerWithJacobian_Kicking_Instance(vector<double> ENvec, d
 	
 }
 
-
 //****************************************************************************************
 
 vector<double> ClassBPlanerWithJacobian(vector<double> ENvec){
