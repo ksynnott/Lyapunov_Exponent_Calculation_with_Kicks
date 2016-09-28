@@ -48,13 +48,13 @@ int main(){
 		
 		cout << "Total Number of steps:  " << NumOfNorm*NormStep << endl;
 
-		int vecsize = 5;			
+		int vecsize = 3;			
 		vector <double> p0(vecsize);			vector <double> y0(vecsize);
 		p0[0] = -0.00001;						y0[0] = -2.1;
 		p0[1] = -0.00001;						y0[1] = 1.5;
 		p0[2] = -0.00001;						y0[2] = 6.1;
-		p0[3] = 0.001;							y0[3] = 2.0;
-		p0[4] = 0.001;							y0[4] = 5.1;
+		//p0[3] = 0.001;							y0[3] = 2.0;
+		//p0[4] = 0.001;							y0[4] = 5.1;
 		 
 		/*vector <long double> p0(vecsize);			vector <long double> y0(vecsize);
 		p0[0] = -0.00001;							y0[0] = -2.1;
@@ -67,9 +67,9 @@ int main(){
 		clock_t st = clock();
 		for(int i = 0; i < NumK; i++){
 			Lyapunov LyapLase(NormStep, dt, TransientTime, TimeEvlo, y0, p0);
-			h.push_back(LyapLase.CalcBigLypunov_Kick_new(ClassCPlanerWithJacobian, ClassCPlanerWithJacobian_Kicking_Instance, InKick + i*dKick, Perturb ));
+			h.push_back(LyapLase.CalcBigLypunov_Kick_new(ClassBPlanerWithJacobian, ClassBPlanerWithJacobian_Kicking_Instance, InKick + i*dKick, Perturb ));
 			k.push_back(InKick + i*dKick);
-			break;
+			//break;
 			loadbarMain(i, NumK, 50, st);
 			
 		}

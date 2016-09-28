@@ -183,7 +183,7 @@ Lyapunov::Lyapunov(int NormalSteps, double TimeStepSize, double TransientTime, d
 
 double Lyapunov::CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> vec), vector<double> (*k_yt)(vector<double> vec, double KickSize), double Kicktime, double kicksize){
 	
-	cout << "Here - 0" << endl;
+	//cout << "Here - 0" << endl;
 	
 	int xsize = (int)x.size();
 	int psize = (int)p.size();
@@ -208,13 +208,6 @@ double Lyapunov::CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> v
 	}
 	
 	
-	// Just as a method of checking
-	cout << "E_x = " << XP[0] << endl;
-	cout << "E_y = " << XP[1] << endl;
-	cout << "N   = " << XP[4] << endl;
-	cout << "|E| = " << sqrt(XP[0]*XP[0] + XP[1]*XP[1]) << endl;
-	cout << "A = " << sqrt(Lambda - 1 - Dp*Dp) << endl;
-	
 	//Renormalize p
 	for(int i = xsize; i < xsize+psize; i++){
 		P[i - xsize] = XP[i];
@@ -229,35 +222,21 @@ double Lyapunov::CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> v
 	// Now that we are on the attractor we can run, looking for the growth of p
 	steps = (TimeEvlo)/dt; // How many steps in total
 	
-	//vector< vector<double> > XX(3, vector<double> (1) );
-	
-	//XX[0][0] = XP[0];
-	//XX[1][0] = XP[1];
-	//XX[2][0] = XP[2];
-	
 	int NumT = 0;
 	vector<double> al; 
 	
-	int kickstep = (int)(Kicktime/dt);
 	
+	// This is a counter that will start again after every kick
+	int ks = 0;
 	// Run . . . 
 	for(int i = 0; i <= steps; i++){
 		
 		XP = RunKut.RK4_11(f_yt, XP);
 		
-		if( i%kickstep == 0 ){
+		if( ks*dt <= Kicktime && (ks+1)*dt > Kicktime ){
 			XP = k_yt(XP, kicksize);
+			ks = 0; // Start again
 		}
-		
-		/*if(i < 15*kickstep){
-			for(int u = 0; u < 3; u++){
-				XX[u].push_back(XP[u]);
-			}
-		}
-		else{
-			
-			break;
-		}*/
 		
 		
 		// For the step we choose, get norm of p then normalise
@@ -279,20 +258,16 @@ double Lyapunov::CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> v
 				XP[g] = P[g - xsize];
 			}
 		}
+		ks++; // Iterate the step. This is for the kicks
 	}
-	
-	//MatoutfileLy(XX ,"AddedValues.txt");
-	//int Stophere = 0;
-	//cout << "Stop here:";
-	//cin >> Stophere;
-	
+
 	// Calculate Lyapunov Exponent
 	double LyapExp = 0.0;
 	for(int i = 0; i < (int)(al.size()); i++){
 		LyapExp = (LyapExp + al[i]);
 	}
 	
-	LookForConvergence(m,  al);
+	//LookForConvergence(m,  al);
 	
 	return (1/(double)(al.size() ))*LyapExp;
 	
@@ -558,6 +533,7 @@ void Lyapunov::LookForConvergence(double m, vector<double> alphas){
 		M[i] = n*m;
 	}
 	TwoVecoutfile(M, h, "Check_Conver.txt");
+	TwoVecoutfile(M, alphas, "Alphas.txt");
 }	
 
 //****************************************************************************************

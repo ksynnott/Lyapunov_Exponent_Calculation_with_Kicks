@@ -55,7 +55,7 @@ static double TransientTime = 4.0;
 static double InKick = 6.0;
 static double FinKick = 10.0;
 static double dKick = 0.1;
-static double NumPet = 8;
+static double NumPet = 6;
 static double Perturb = 0.1;
 
 // Normalization
