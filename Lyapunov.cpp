@@ -248,8 +248,10 @@ double Lyapunov::CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> v
 			
 			NumT = m + NumT;   // Keep track
 			
-			double tmp1 = 1/((double)(m*dt));
+			double tmp1 = 1.0/((double)(m*dt));
 			double tmp2 = GetNorm(P); 
+			
+			//cout << "m x dt =  " << m*dt << "  Norm of P = " << tmp2 << "  1/(m x dt) log(|P|) = " << tmp1*log(tmp2) << "\r" << flush;
 			
 			al.push_back(tmp1*log(tmp2)); // Vector holding the growth of p for this run
 			
