@@ -18,7 +18,7 @@ Param = loadtxt("Parameters.txt")
 xlow  = Param[6]
 xhigh = Param[7]
 
-dataY = loadtxt("LyapunovSlice.txt")
+dataY = loadtxt("ClassC_Eval_3/LyapunovSlice.txt")
 
 dataX = np.linspace(xlow, xhigh, dataY.size)
 

@@ -267,7 +267,7 @@ double Lyapunov::CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> v
 		LyapExp = (LyapExp + al[i]);
 	}
 	
-	//LookForConvergence(m,  al);
+	LookForConvergence(m,  al);
 	
 	return (1/(double)(al.size() ))*LyapExp;
 	
