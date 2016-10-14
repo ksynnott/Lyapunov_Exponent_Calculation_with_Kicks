@@ -47,6 +47,8 @@ private:
 	vector <double> normalize(vector<double> v);
 	vector <long double> normalize(vector<long double> v);
 	
+	vector <double> normalize_P_only(vector<double> p);
+	
 	double GetNorm(vector<double> v);
 	long double GetNorm(vector<long double> v);
 	double GetVol(vector<vector<long double> > v, int i);
