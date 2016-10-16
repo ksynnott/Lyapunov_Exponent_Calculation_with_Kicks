@@ -15,10 +15,10 @@ plt.plot(dataX, dataY1[:,1], 'g', linewidth=1.0)
 
 Param = loadtxt("Parameters.txt")
 
-xlow  = Param[6]
+xlow  = 0.01
 xhigh = Param[7]
 
-dataY = loadtxt("ClassC_Eval_3/LyapunovSlice.txt")
+dataY = loadtxt("ClassB_on_StrangeAttractor/LyapunovSlice.txt")
 
 dataX = np.linspace(xlow, xhigh, dataY.size)
 
