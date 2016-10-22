@@ -43,19 +43,29 @@ int main(){
 
 
 	{
-		int NumK = (int)((FinKick - InKick)/dKick);
 		double TimeEvlo = ((double)NumOfNorm*NormStep*dt);
 
 		cout << "Total Number of steps:  " << NumOfNorm*NormStep << endl;
 
 
-		int vecsize = 3;
+		// We are excuting on lig Scale
+		double kickitlg = log10(InKick);
+		double kickfnlg = log10(FinKick);
+		double dklg = (kickfnlg - kickitlg)/NKick;
+
+		//Now for the values we deal with
+		double runkit = log10(IrunK);
+		double runkfn = log10(FrunK);
+
+		int numRuns = (int)((runkfn - runkit)/dklg);
+
+		int vecsize = 5;
 		vector <double> p0(vecsize);			vector <double> y0(vecsize);
-		p0[0] = -0.00001;						y0[0] = -1.0;
-		p0[1] = -0.00001;						y0[1] = 2.0;
-		p0[2] = -0.00001;						y0[2] = 5.0;
-		//p0[3] = 0.001;							y0[3] = 2.0;
-		//p0[4] = 0.001;							y0[4] = 5.1;
+		p0[0] = 0.001;						y0[0] = 1.0;
+		p0[1] = -0.001;						y0[1] = -2.0;
+		p0[2] = 0.001;						y0[2] = 3.0;
+		p0[3] = 0.001;						y0[3] = 2.0;
+		p0[4] = 0.001;						y0[4] = 5.1;
 
 		/*vector <long double> p0(vecsize);			vector <long double> y0(vecsize);
 		p0[0] = -0.00001;							y0[0] = -2.1;
@@ -66,18 +76,29 @@ int main(){
 		vector<double> k;
 
 		clock_t st = clock();
-		for(int i = 0; i < NumK; i++){
+		for(int i = 0; i < numRuns; i++){
 			Lyapunov LyapLase(NormStep, dt, TransientTime, TimeEvlo, y0, p0);
-			h.push_back(LyapLase.CalcBigLypunov_Kick_new(ClassBPlanerWithJacobian, ClassBPlanerWithJacobian_Kicking_Instance, InKick + i*dKick, Perturb ));
-			k.push_back(InKick + i*dKick);
-			break;
-			loadbarMain(i, NumK, 50, st);
-
+			double t_kick = pow(10, (runkit + i*dklg) );
+			h.push_back(LyapLase.CalcBigLypunov_Kick_new(ClassCPlanerWithJacobian, ClassCPlanerWithJacobian_Kicking_Instance, t_kick, Perturb ));
+			k.push_back(kickitlg + i*dklg);
+			loadbarMain(i, NKick, 50, st);
 		}
 
+		string st0 = "LyapunovSlice_";
+		string st1 = "Kvals_";
+		string num = to_string(FlNum);
+		string ext = ".txt";
 
-		Vecoutfile(h ,"LyapunovSlice.txt");
-		Vecoutfile(k ,"Kvals.txt");
+		st0.append(num);
+		st0.append(ext);
+
+		st1.append(num);
+		st1.append(ext);
+
+		cout << st0 << endl;
+
+		Vecoutfile(h , st0);
+		Vecoutfile(k , st1);
 	}
 
 //****************************************************************************************
@@ -318,10 +339,10 @@ vector<long double> ClassBPlanerWithJacobian_Kicking_Instance(vector<long double
 
 void SetParameters(string filename){
 
-	fstream myfile(filename, std::ios_base::in);
+	fstream myfile(filename.c_str(), std::ios_base::in);
 
     myfile >> Lambda >> Dp >> Gnc >> Gpc >> TransientTime >> dt >> InKick >> FinKick
-    	   >> dKick >> Perturb >> NumPet >> NormStep >> NumOfNorm >> EquScal;
+    	   >> NKick >> IrunK >> FrunK >> FlNum >> Perturb >> NumPet >> NormStep >> NumOfNorm >> EquScal;
     myfile.close();
 
     cout << "     **** Parameters **** " << endl;
@@ -333,11 +354,15 @@ void SetParameters(string filename){
     cout << "Transient Time       = " << TransientTime << endl;
     cout << "dt                   = " << dt << endl;
     cout << "--------------------------------" << endl;
-    cout << "Initial Kick         = " << InKick << endl;
-    cout << "Final Kick           = " << FinKick << endl;
-    cout << "delta Kick           = " << dKick << endl;
-    cout << "Kick Size            = " << Perturb << endl;
-    cout << "Number of petals     = " << NumPet << endl;
+	cout << "Now doing log scale:" << endl;
+	cout << "Initial Kick nonlog yet = " << InKick << endl;
+    cout << "Final Kick nonlog yet   = " << FinKick << endl;
+    cout << "Num of diff intvls      = " << NKick << endl;
+	cout << "Inital Kick for this run = " << IrunK << endl;
+	cout << "Final Kick for this run  = " << FrunK << endl;
+	cout << "File Number              = " << FlNum << endl;
+    cout << "Kick Size                = " << Perturb << endl;
+    cout << "Number of petals         = " << NumPet << endl;
     cout << "--------------------------------" << endl;
     cout << "Steps Till Normalize = " << NormStep << endl;
     cout << "Num of Normalize     = " << NumOfNorm << endl;
@@ -359,6 +384,8 @@ void ExecuteScaling(){
 	dKick = dKick / EquScal;
 
 }
+
+
 
 //****************************************************************************************
 
@@ -407,8 +434,8 @@ long double GetPhi(vector<long double> ENvec){
 //****************************************************************************************
 
 void OutMat(vector <vector <double> > Mat){
-	for(int i = 0; i < Mat[0].size(); i++){
-		for(int j = 0; j < Mat.size(); j++){
+	for(int i = 0; i < (int)Mat[0].size(); i++){
+		for(int j = 0; j < (int)Mat.size(); j++){
 			cout << "  " << Mat[j][i];
 		}
 		cout << "\n" << endl;
@@ -423,7 +450,7 @@ void OutVec(vector <double> Vec){
 
 void Matoutfile(vector <vector <double> > Mat ,std::string filename){
 
-	std::ofstream ofile(filename, std::ios::out);
+	std::ofstream ofile(filename.c_str(), std::ios::out);
 
 	ofile.precision(15);
 
@@ -438,7 +465,7 @@ void Matoutfile(vector <vector <double> > Mat ,std::string filename){
 
 void Vecoutfile(vector <double> vec ,std::string filename){
 
-	std::ofstream ofile(filename, std::ios::out);
+	std::ofstream ofile(filename.c_str(), std::ios::out);
 
 	ofile.precision(15);
 
@@ -449,7 +476,7 @@ void Vecoutfile(vector <double> vec ,std::string filename){
 	ofile.close();
 }
 
-void MatToVecOutFiles(vector <vector <double> > Mat ,std::string filename){
+/*void MatToVecOutFiles(vector <vector <double> > Mat ,std::string filename){
 
 	ofstream sizefile("NumOfFiles.txt", std::ios::out);
 	sizefile << Mat.size() << "\n";
@@ -477,7 +504,7 @@ void MatToVecOutFiles(vector <vector <double> > Mat ,std::string filename){
 	}
 
 }
-
+*/
 static inline void loadbarMain(unsigned int x, unsigned int n, unsigned int w){
     if ( (x != n) && (x % (n/100+1) != 0) ) return;
 
