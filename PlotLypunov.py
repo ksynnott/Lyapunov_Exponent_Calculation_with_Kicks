@@ -18,9 +18,9 @@ Param = loadtxt("Parameters.txt")
 xlow  = 0.01
 xhigh = Param[7]
 
-dataY = loadtxt("ClassB_on_StrangeAttractor/LyapunovSlice.txt")
+dataY = loadtxt("LyapunovSlice_C_3_1.txt")
 
-dataX = np.linspace(xlow, xhigh, dataY.size)
+dataX = loadtxt("Kvals_C_3_1.txt")
 
 plt.plot(dataX, dataY, 'b', linewidth=1.0)
 

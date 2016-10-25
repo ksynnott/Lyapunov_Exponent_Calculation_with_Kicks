@@ -201,53 +201,33 @@ double Lyapunov::CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> v
 
 	// This is a counter that will start again after every kick
 	int ks = 0;
+	int nk = 0;
 
 	// Iterate long enough to insure x is in attractor
 	int steps = Tran/dt;
 	RungeKutta RunKut(steps, dt);
 
 	for(int i = 0; i < steps; i++){
-		//
-		// cout << XP[0] << endl;
-		// cout << XP[1] << endl;
-		// cout << XP[2] << endl;
-		// cout << XP[3] << endl;
-		// cout << XP[4] << endl;
-		// cout << XP[5] << endl;
-		// cout << XP[6] << endl;
-		// cout << XP[7] << endl;
-		// cout << XP[8] << endl;
-		// cout << XP[9] << endl;
 
 		XP = RunKut.RK4_11(f_yt, XP);
 
-		// cout << "++++++++++" << endl;
-		// cout << XP[0] << endl;
-		// cout << XP[1] << endl;
-		// cout << XP[2] << endl;
-		// cout << XP[3] << endl;
-		// cout << XP[4] << endl;
-		// cout << XP[5] << endl;
-		// cout << XP[6] << endl;
-		// cout << XP[7] << endl;
-		// cout << XP[8] << endl;
-		// cout << XP[9] << endl;
-
-
-
 		if( ks*dt <= Kicktime && ((ks+1)*dt > Kicktime) && i > 1000 ){
+
 			XP = k_yt(XP, kicksize);
 			ks = 0; // Start again
-
+			nk ++;
 		}
 
 		//Want to do an normalisation of P every now and again. To save explosion of nummerics
 		if( i%m == 0 && i > 0){
 			XP = normalize_P_only( XP );
-
 		}
 
-		ks++;
+		if(i <= 1000){
+			ks = 0;
+		}
+		else
+			ks++;
 
 	}
 
@@ -311,7 +291,7 @@ double Lyapunov::CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> v
 		LyapExp = (LyapExp + al[i]);
 	}
 
-	LookForConvergence(m,  al);
+	//LookForConvergence(m,  al);
 
 	return (1/(double)(al.size() ))*LyapExp;
 

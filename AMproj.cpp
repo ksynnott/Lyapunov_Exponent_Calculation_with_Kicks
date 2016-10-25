@@ -79,13 +79,14 @@ int main(){
 		for(int i = 0; i < numRuns; i++){
 			Lyapunov LyapLase(NormStep, dt, TransientTime, TimeEvlo, y0, p0);
 			double t_kick = pow(10, (runkit + i*dklg) );
+			//cout << t_kick << endl;
 			h.push_back(LyapLase.CalcBigLypunov_Kick_new(ClassCPlanerWithJacobian, ClassCPlanerWithJacobian_Kicking_Instance, t_kick, Perturb ));
-			k.push_back(kickitlg + i*dklg);
+			k.push_back(runkit + i*dklg);
 			loadbarMain(i, NKick, 50, st);
 		}
 
-		string st0 = "LyapunovSlice_";
-		string st1 = "Kvals_";
+		string st0 = "LyapunovSlice_C_3_";
+		string st1 = "Kvals_C_3_";
 		string num = to_string(FlNum);
 		string ext = ".txt";
 
@@ -189,18 +190,6 @@ vector<double> ClassCPlanerWithJacobian_Kicking_Instance(vector<double> ENvec, d
 	f[7] = ENvec[7];
 	f[8] = ENvec[8];
 	f[9] = ENvec[9];
-
-	f[0] = EquScal*f[0];
-	f[1] = EquScal*f[1];
-	f[2] = EquScal*f[2];
-	f[3] = EquScal*f[3];
-	f[4] = EquScal*f[4];
-
-	f[5] = EquScal*f[5];
-	f[6] = EquScal*f[6];
-	f[7] = EquScal*f[7];
-	f[8] = EquScal*f[8];
-	f[9] = EquScal*f[9];
 
 
 	return f;
@@ -383,6 +372,9 @@ void ExecuteScaling(){
 	FinKick = FinKick / EquScal;
 	dKick = dKick / EquScal;
 
+
+	IrunK = IrunK / EquScal;
+	FrunK = FrunK / EquScal;
 }
 
 
