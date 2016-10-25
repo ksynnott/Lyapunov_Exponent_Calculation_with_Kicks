@@ -15,16 +15,17 @@ plt.plot(dataX, dataY1[:,1], 'g', linewidth=1.0)
 
 Param = loadtxt("Parameters.txt")
 
-xlow  = 0.01
-xhigh = Param[7]
 
-dataY = loadtxt("LyapunovSlice_C_3_1.txt")
+dataY = loadtxt("LyapunovSlice_1.txt")
 
-dataX = loadtxt("Kvals_C_3_1.txt")
+dataX = loadtxt("Kvals_1.txt")
+#
+# xlow  = dataX[0]
+# xhigh = dataY[-1]
+#
+plt.plot(dataY, 'b', linewidth=1.0)
 
-plt.plot(dataX, dataY, 'b', linewidth=1.0)
-
-plt.plot((xlow,np.amax(dataX)),(0.0,0.0),'-k', linewidth = 0.5)
+#plt.plot((xlow, xhigh),(0.0,0.0),'-k', linewidth = 0.5)
 plt.ylabel('Lyapunov')
 plt.xlabel('K')
 #plt.axis((21.0,24.0,-5,12))

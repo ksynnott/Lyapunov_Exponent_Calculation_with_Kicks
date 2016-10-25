@@ -59,18 +59,18 @@ int main(){
 
 		int numRuns = (int)((runkfn - runkit)/dklg);
 
-		int vecsize = 5;
-		vector <double> p0(vecsize);			vector <double> y0(vecsize);
+		int vecsize = 3;
+		/*vector <double> p0(vecsize);			vector <double> y0(vecsize);
 		p0[0] = 0.001;						y0[0] = 1.0;
 		p0[1] = -0.001;						y0[1] = -2.0;
 		p0[2] = 0.001;						y0[2] = 3.0;
 		p0[3] = 0.001;						y0[3] = 2.0;
-		p0[4] = 0.001;						y0[4] = 5.1;
+		p0[4] = 0.001;						y0[4] = 5.1;*/
 
-		/*vector <long double> p0(vecsize);			vector <long double> y0(vecsize);
+		vector <double> p0(vecsize);			vector <double> y0(vecsize);
 		p0[0] = -0.00001;							y0[0] = -2.1;
 		p0[1] = -0.00001;							y0[1] = 1.5;
-		p0[2] = -0.00001;							y0[2] = 6.1;*/
+		p0[2] = -0.00001;							y0[2] = 5.1;
 
 		vector<double> h;
 		vector<double> k;
@@ -80,8 +80,9 @@ int main(){
 			Lyapunov LyapLase(NormStep, dt, TransientTime, TimeEvlo, y0, p0);
 			double t_kick = pow(10, (runkit + i*dklg) );
 			//cout << t_kick << endl;
-			h.push_back(LyapLase.CalcBigLypunov_Kick_new(ClassCPlanerWithJacobian, ClassCPlanerWithJacobian_Kicking_Instance, t_kick, Perturb ));
+			h.push_back(LyapLase.CalcBigLypunov_Kick_new(ClassBPlanerWithJacobian, ClassBPlanerWithJacobian_Kicking_Instance, t_kick, Perturb ));
 			k.push_back(runkit + i*dklg);
+			//break;
 			loadbarMain(i, NKick, 50, st);
 		}
 

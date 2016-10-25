@@ -191,6 +191,7 @@ double Lyapunov::CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> v
 	vector<double> XP( xsize + psize );
 	vector<double> P(psize);
 
+
 	// Initialise vector XP
 	for(int i = 0; i < (int)XP.size(); i++){
 		if(i < xsize)
@@ -207,12 +208,12 @@ double Lyapunov::CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> v
 	int steps = Tran/dt;
 	RungeKutta RunKut(steps, dt);
 
+
 	for(int i = 0; i < steps; i++){
 
 		XP = RunKut.RK4_11(f_yt, XP);
 
 		if( ks*dt <= Kicktime && ((ks+1)*dt > Kicktime) && i > 1000 ){
-
 			XP = k_yt(XP, kicksize);
 			ks = 0; // Start again
 			nk ++;
@@ -231,13 +232,14 @@ double Lyapunov::CalcBigLypunov_Kick_new(vector<double> (*f_yt)(vector<double> v
 
 	}
 
+
+
 	//Renormalize p
 	for(int i = xsize; i < xsize+psize; i++){
 		P[i - xsize] = XP[i];
 	}
 
 	P = normalize(P);
-
 
 	for(int i = xsize; i < xsize+psize; i++){
 		XP[i] = P[i - xsize];
